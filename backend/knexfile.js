@@ -2,14 +2,25 @@ import { config } from "dotenv";
 
 config();
 
+const sslConfig =
+  process.env.DB_SSL === "true"
+    ? { rejectUnauthorized: true, minVersion: "TLSv1.2" }
+    : false;
+
+console.log("DEBUG NODE_ENV:", JSON.stringify(process.env.NODE_ENV));
+console.log("DEBUG DB_SSL raw:", JSON.stringify(process.env.DB_SSL));
+console.log("DEBUG sslConfig used:", sslConfig);
+
 const knexConfig = {
   development: {
     client: String(process.env.DB_CLIENT) || "mysql",
     connection: {
       host: String(process.env.DB_HOST) || "localhost",
+      port: Number(process.env.DB_PORT) || 3306,
       user: String(process.env.DB_USERNAME) || "root",
       password: String(process.env.DB_PASSWORD) || "",
       database: String(process.env.DB_NAME) || "",
+      ssl: sslConfig,
     },
     migrations: {
       directory: "./src/migrations",
@@ -21,9 +32,11 @@ const knexConfig = {
     client: String(process.env.DB_CLIENT) || "mysql",
     connection: {
       host: String(process.env.DB_HOST) || "localhost",
+      port: Number(process.env.DB_PORT) || 3306,
       user: String(process.env.DB_USERNAME) || "root",
       password: String(process.env.DB_PASSWORD) || "",
       database: String(process.env.DB_NAME) || "",
+      ssl: sslConfig,
     },
     migrations: {
       directory: "./src/migrations",
