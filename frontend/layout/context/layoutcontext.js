@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, createContext } from 'react';
-// Dihapus: impor tipe
-export const LayoutContext = createContext(null);
+
+/** @type {React.Context<any>} */
+export const LayoutContext = createContext({});
 
 export const LayoutProvider = ({ children }) => {
     const [layoutConfig, setLayoutConfig] = useState({
