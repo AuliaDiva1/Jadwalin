@@ -7,10 +7,6 @@ const sslConfig =
     ? { rejectUnauthorized: true, minVersion: "TLSv1.2" }
     : false;
 
-console.log("DEBUG NODE_ENV:", JSON.stringify(process.env.NODE_ENV));
-console.log("DEBUG DB_SSL raw:", JSON.stringify(process.env.DB_SSL));
-console.log("DEBUG sslConfig used:", sslConfig);
-
 const knexConfig = {
   development: {
     client: String(process.env.DB_CLIENT) || "mysql",
