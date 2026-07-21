@@ -3,6 +3,7 @@ import * as Model from '../models/jobModel.js';
 import { db } from '../core/config/knex.js';
 import { getOperationTypeById } from '../models/operationTypeModel.js';
 import { updateStock } from '../models/materialModel.js';
+import * as XLSX from 'xlsx';
 import {
   getJobsPerPeriode,
   getJobsRealisasi,
@@ -12,6 +13,19 @@ import {
 const formatDateToMySQL = (dateStr) => {
   if (!dateStr) return null;
   return dateStr.replace('T', ' ').replace('Z', '');
+};
+
+const excelDateToMySQL = (val) => {
+  if (!val) return null;
+  let d;
+  if (val instanceof Date) {
+    d = val;
+  } else {
+    d = new Date(val);
+  }
+  if (isNaN(d.getTime())) return null;
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
 const getReservedStock = async (material_id, exclude_job_id = null) => {
@@ -167,6 +181,101 @@ export const createJobController = async (req, res) => {
   } catch (err) {
     console.error('createJob error:', err);
     return error(res, 'Gagal menambahkan job');
+  }
+};
+
+export const importJobsController = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'File Excel wajib diunggah' });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
+    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+    const rows     = XLSX.utils.sheet_to_json(sheet, { defval: null });
+
+    if (rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'File Excel kosong atau format kolom tidak sesuai' });
+    }
+
+    const results = { total: rows.length, success: 0, failed: 0, errors: [] };
+
+    for (let i = 0; i < rows.length; i++) {
+      const row    = rows[i];
+      const rowNum = i + 2; // baris 1 = header
+
+      try {
+        const namaOperasi  = String(row['Jenis Operasi'] || '').trim();
+        const kodeBahan    = row['Kode Bahan Baku'] ? String(row['Kode Bahan Baku']).trim() : null;
+        const materialUsed = row['Jumlah Material'] != null ? Number(row['Jumlah Material']) : null;
+        const urgentRaw    = String(row['Urgent'] || '').trim().toLowerCase();
+        const isUrgent     = ['ya', 'yes', 'true', '1'].includes(urgentRaw);
+        const deadlineRaw  = row['Deadline Customer'];
+
+        if (!namaOperasi) throw new Error('Kolom "Jenis Operasi" wajib diisi');
+
+        const opType = await db('operation_types')
+          .whereRaw('LOWER(nama_operasi) = ?', [namaOperasi.toLowerCase()])
+          .first();
+
+        if (!opType) throw new Error(`Jenis operasi "${namaOperasi}" tidak ditemukan`);
+        if (!opType.is_active) throw new Error(`Jenis operasi "${namaOperasi}" tidak aktif`);
+
+        let material = null;
+
+        if (opType.requires_material) {
+          if (!kodeBahan) throw new Error('Kolom "Kode Bahan Baku" wajib diisi untuk operasi ini');
+
+          material = await db('materials')
+            .whereRaw('LOWER(kode_bahan_baku) = ?', [kodeBahan.toLowerCase()])
+            .first();
+
+          if (!material) throw new Error(`Bahan baku dengan kode "${kodeBahan}" tidak ditemukan`);
+          if (!materialUsed || materialUsed <= 0) throw new Error('Kolom "Jumlah Material" wajib diisi (> 0) untuk operasi ini');
+
+          const reserved  = await getReservedStock(material.id);
+          const available = material.current_stock - reserved;
+
+          if (available < materialUsed) {
+            throw new Error(`Stok ${material.material_name} tidak cukup. Tersedia: ${available}, dibutuhkan: ${materialUsed}`);
+          }
+        }
+
+        const baseTime          = opType.base_time ?? 20;
+        const tpu                = opType.time_per_unit ?? 15;
+        const matUsed             = materialUsed || 0;
+        const processingTime     = Math.round(baseTime + (matUsed * tpu));
+        const deadlineFormatted  = excelDateToMySQL(deadlineRaw);
+
+        await Model.addJob({
+          user_id:            req.user?.userId || null,
+          machine_id:         null,
+          material_id:        material?.id || null,
+          operation_id:       opType.id,
+          material_used:      materialUsed || null,
+          processing_time:    processingTime,
+          deadline_customer:  deadlineFormatted,
+          deadline_is_manual: !!deadlineFormatted,
+          deadline:           deadlineFormatted,
+          is_urgent:          isUrgent,
+          job_status:         'Pending',
+        });
+
+        results.success++;
+      } catch (rowErr) {
+        results.failed++;
+        results.errors.push({ row: rowNum, message: rowErr.message });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Import selesai: ${results.success} berhasil, ${results.failed} gagal dari ${results.total} baris`,
+      data: results,
+    });
+  } catch (err) {
+    console.error('importJobs error:', err);
+    return error(res, 'Gagal mengimpor job dari Excel');
   }
 };
 

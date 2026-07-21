@@ -1,5 +1,7 @@
 import { success, error } from '../utils/response.js';
 import { db } from '../core/config/knex.js';
+import { createJobEvent } from '../services/googleCalendarService.js';
+import { isConnected } from '../models/googleAuthModel.js';
 import {
   getAllSchedules,
   getScheduleById,
@@ -50,6 +52,15 @@ const toMySQL = (d) => {
   return dt.toLocaleString('sv-SE').slice(0, 19).replace('T', ' ');
 };
 
+// Format ke string lokal WIB TANPA offset/Z, khusus buat dikirim ke Google Calendar API
+// bareng timeZone: 'Asia/Jakarta'. Kalau pakai .toISOString() disini, Google API akan
+// menginterpretasikan string itu sebagai UTC absolut, lalu field timeZone cuma dipakai
+// buat label tampilan -> hasilnya jam event jadi geser (double timezone shift).
+const toJakartaISOString = (d) => {
+  const dt = d instanceof Date ? d : new Date(d);
+  return dt.toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).replace(' ', 'T');
+};
+
 const getMachineBusyUntil = async () => {
   const now = new Date();
   const busyJobs = await db('jobs as j')
@@ -69,6 +80,71 @@ const getMachineBusyUntil = async () => {
     }
   }
   return busyUntil;
+};
+
+// ============================================================
+// SYNC KE GOOGLE CALENDAR (dipakai oleh finalize & validate)
+// ============================================================
+
+const syncScheduleToCalendar = async (scheduleId, userId) => {
+  let calendarSync = { attempted: false, synced: 0, failed: 0, skipped_reason: null };
+
+  console.log('[DEBUG syncScheduleToCalendar] START scheduleId:', scheduleId, 'userId:', userId);
+
+  if (!userId) {
+    calendarSync.skipped_reason = 'User tidak teridentifikasi';
+    console.log('[DEBUG syncScheduleToCalendar] SKIP - userId kosong');
+    return calendarSync;
+  }
+
+  const connected = await isConnected(userId);
+  console.log('[DEBUG syncScheduleToCalendar] isConnected result:', connected);
+
+  if (!connected) {
+    calendarSync.skipped_reason = 'User belum connect Google Calendar';
+    console.log('[DEBUG syncScheduleToCalendar] SKIP - belum connect');
+    return calendarSync;
+  }
+
+  calendarSync.attempted = true;
+
+  const jobsToSync = await db('jobs as j')
+    .leftJoin('machines as m',         'j.assigned_machine_id', 'm.id')
+    .leftJoin('operation_types as ot', 'j.operation_id',        'ot.id')
+    .where('j.schedule_id', scheduleId)
+    .whereNotNull('j.scheduled_start')
+    .whereNotNull('j.scheduled_end')
+    .select(
+      'j.id', 'j.job_id', 'j.scheduled_start', 'j.scheduled_end',
+      'j.priority_score', 'm.machine_name', 'ot.nama_operasi as operation_type',
+    );
+
+  console.log('[DEBUG syncScheduleToCalendar] jobsToSync ditemukan:', jobsToSync.length, jobsToSync.map(j => j.job_id));
+
+  for (const job of jobsToSync) {
+    try {
+      console.log('[DEBUG syncScheduleToCalendar] mencoba insert event untuk job:', job.job_id);
+      const eventId = await createJobEvent(userId, {
+        job_code:       job.job_id,
+        operation_type: job.operation_type || '',
+        machine_name:   job.machine_name   || '-',
+        priority_score: job.priority_score,
+        start_time:     toJakartaISOString(job.scheduled_start),
+        end_time:       toJakartaISOString(job.scheduled_end),
+      });
+      console.log('[DEBUG syncScheduleToCalendar] SUKSES, eventId:', eventId, 'untuk job:', job.job_id);
+      await db('jobs').where({ id: job.id }).update({ google_event_id: eventId });
+      calendarSync.synced++;
+    } catch (err) {
+      console.error(`[syncScheduleToCalendar] gagal sync job ${job.job_id} ke Calendar:`, err.message);
+      console.error(`[DEBUG syncScheduleToCalendar] FULL ERROR:`, err);
+      calendarSync.failed++;
+    }
+  }
+
+  console.log('[DEBUG syncScheduleToCalendar] FINAL RESULT:', calendarSync);
+
+  return calendarSync;
 };
 
 // ============================================================
@@ -290,8 +366,11 @@ export const finalizeSchedule = async (req, res) => {
       updated_at:    db.fn.now(),
     });
 
+    console.log('[DEBUG finalizeSchedule] req.user:', req.user);
+    const calendarSync = await syncScheduleToCalendar(id, req.user?.userId);
+
     const updated = await getScheduleById(id);
-    return success(res, 'Jadwal berhasil difinalisasi', updated);
+    return success(res, 'Jadwal berhasil difinalisasi', { ...updated, calendar_sync: calendarSync });
   } catch (err) {
     console.error('[finalizeSchedule] error:', err);
     return error(res, 'Gagal memfinalisasi jadwal');
@@ -377,8 +456,19 @@ export const validateScheduleController = async (req, res) => {
     const userId = req.user?.userId || null;
     if (!userId)
       return res.status(401).json({ success: false, message: 'User tidak teridentifikasi, silakan login ulang' });
+
+    console.log('[DEBUG validateScheduleController] req.params.id:', req.params.id, 'userId:', userId);
+
     const updated = await validateSchedule(req.params.id, userId);
-    res.json({ success: true, message: 'Jadwal berhasil divalidasi menjadi final', data: updated });
+    const calendarSync = await syncScheduleToCalendar(req.params.id, userId);
+
+    console.log('[DEBUG validateScheduleController] calendarSync final:', calendarSync);
+
+    res.json({
+      success: true,
+      message: 'Jadwal berhasil divalidasi menjadi final',
+      data: { ...updated, calendar_sync: calendarSync },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

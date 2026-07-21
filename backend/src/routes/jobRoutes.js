@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import {
   getAllJobsController,
   getJobByIdController,
@@ -6,6 +7,7 @@ import {
   getUrgentJobsController,
   getIdleMachinesController,
   createJobController,
+  importJobsController,
   updateJobController,
   updateJobActualController,
   updateJobStatusController,
@@ -23,6 +25,7 @@ import {
 } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Report routes — taruh SEBELUM /:id
 router.get('/report/periode',       authenticate, getJobPeriodeReport);
@@ -37,7 +40,8 @@ router.get('/status/:status', authenticate, getJobsByStatusController);
 router.get('/:id',            authenticate, getJobByIdController);
 
 // POST
-router.post('/', authenticate, authorizeAdminOrManajer, createJobController);
+router.post('/',       authenticate, authorizeAdminOrManajer, createJobController);
+router.post('/import', authenticate, authorizeAdminOrManajer, upload.single('file'), importJobsController);
 
 // PATCH — static routes SEBELUM dynamic /:id
 router.patch('/reset-batch',    authenticate, authorizeAdminOrManajer,          resetJobsBatchController);

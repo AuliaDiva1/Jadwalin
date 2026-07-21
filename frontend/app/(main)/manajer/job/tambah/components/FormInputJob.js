@@ -219,9 +219,20 @@ const FormInputJob = () => {
 
       <div style={{ maxWidth: '640px', margin: '0 auto' }}>
         <div className="card" style={{ borderRadius: '16px', padding: '2rem' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1.75rem', fontSize: '1.1rem' }}>
-            Input Job Baru
-          </h3>
+          <div className="flex justify-content-between align-items-center" style={{ marginBottom: '1.75rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+              Input Job Baru
+            </h3>
+            <Button
+              label="Import dari Excel"
+              icon="pi pi-file-excel"
+              severity="secondary"
+              outlined
+              size="small"
+              onClick={() => routerNav.push('/manajer/job/import')}
+              style={{ borderRadius: '10px' }}
+            />
+          </div>
 
           {/* Operation Type */}
           <div style={fieldStyle}>

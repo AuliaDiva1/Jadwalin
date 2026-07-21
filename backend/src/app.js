@@ -2,7 +2,9 @@ import cors from "cors";
 import express from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser"; // [BARU]
 import authRoutes from './routes/authRoutes.js';
+import googleAuthRoutes from './routes/googleAuthRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import machineRoutes from './routes/machineRoutes.js';
 import materialRoutes from './routes/materialRoutes.js';
@@ -45,6 +47,7 @@ app.use(cors({
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser()); // [BARU]
 
 app.use(activityLogger);
 
@@ -53,6 +56,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use('/api/auth/google', googleAuthRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/machines', machineRoutes);
 app.use('/api/materials', materialRoutes);
@@ -71,6 +75,5 @@ app.use('/api/operation-types', operationTypeRoutes);
 app.use('/api/operation-materials', operationMaterialRoutes);
 app.use('/api/work-calendar', workCalendarRoutes);
 app.use('/api/work-day-overtime', workDayOvertimeRoutes);
-
 
 export default app;

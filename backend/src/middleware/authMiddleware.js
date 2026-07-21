@@ -24,11 +24,19 @@ export const optionalAuth = async (req, res, next) => {
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let token = null;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.query.token) {
+      // fallback khusus untuk testing manual di browser (mis. /connect)
+      token = req.query.token;
+    }
+
+    if (!token) {
       return res.status(401).json({ status: 'error', message: 'Token tidak ditemukan' });
     }
 
-    const token = authHeader.split(' ')[1];
     const blacklisted = await isTokenBlacklisted(token);
     if (blacklisted) {
       return res.status(401).json({ status: 'error', message: 'Token sudah tidak valid, silakan login ulang' });

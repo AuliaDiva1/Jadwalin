@@ -60,3 +60,15 @@ export const getAllUsers = async () => {
 export const updateUserStatus = async (id, is_active) => {
   return db('users').where({ id }).update({ is_active, updated_at: db.fn.now() });
 };
+
+// ─── Google Login ────────────────────────────────────────────────────────────
+export const findUserByGoogleId = async (googleId) => {
+  return db('users').where({ google_id: googleId }).first();
+};
+
+export const linkGoogleId = async (userId, googleId) => {
+  return db('users').where({ id: userId }).update({
+    google_id: googleId,
+    updated_at: db.fn.now(),
+  });
+};

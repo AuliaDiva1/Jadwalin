@@ -125,7 +125,17 @@ const CSS = `
   .lp-divider-line { flex:1; height:1px; background:#f1f5f9; }
   .lp-divider-txt  { font-size:11px; color:#cbd5e1; font-weight:500; }
 
-  .lp-footer { text-align:center; }
+  .lp-btn-google {
+    width:100%; height:48px; border-radius:10px;
+    border:1.5px solid #e2e8f0; background:#fff;
+    font-family:'Poppins',sans-serif; font-size:14px; font-weight:600; color:#334155;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+    transition:border-color .2s, background .2s, transform .2s;
+  }
+  .lp-btn-google:hover:not(:disabled) { border-color:#cbd5e1; background:#f8fafc; transform:translateY(-2px); }
+  .lp-btn-google:disabled { opacity:.5; cursor:not-allowed; }
+
+  .lp-footer { text-align:center; margin-top:20px; }
   .lp-footer-txt  { font-size:12px; color:#94a3b8; }
   .lp-footer-link { font-size:12px; color:#7c3aed; text-decoration:none; font-weight:500; }
   .lp-footer-link:hover { color:#5b21b6; text-decoration:underline; }
@@ -172,6 +182,10 @@ export default function LoginPage() {
       toastRef.current?.showToast('01', err.response?.data?.message || 'Koneksi ke server gagal');
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
   };
 
   return (
@@ -238,6 +252,22 @@ export default function LoginPage() {
               }
             </button>
           </form>
+
+          <div className="lp-divider">
+            <div className="lp-divider-line" />
+            <span className="lp-divider-txt">ATAU</span>
+            <div className="lp-divider-line" />
+          </div>
+
+          <button type="button" className="lp-btn-google" onClick={handleGoogleLogin} disabled={loading}>
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.4 0 10.3-1.9 14-5.3l-6.5-5.4C29.4 35 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.4C41.4 35.6 44 30.2 44 24c0-1.3-.1-2.7-.4-3.5z"/>
+            </svg>
+            Login dengan Google
+          </button>
 
           <div className="lp-footer">
             <span className="lp-footer-txt">Butuh bantuan? </span>

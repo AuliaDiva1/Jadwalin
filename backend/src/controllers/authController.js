@@ -11,10 +11,14 @@ import {
   getAllUsers,
   updateUserStatus,
   findUserById,
+  findUserByGoogleId,
+  linkGoogleId,
 } from '../models/authModel.js';
 import { hashPassword, comparePassword } from '../utils/hash.js';
 import { success, error } from '../utils/response.js';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { getLoginUrl, exchangeCodeForProfile } from '../services/googleCalendarService.js';
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const register = async (req, res) => {
@@ -77,6 +81,10 @@ export const login = async (req, res) => {
 
     if (!user.is_active) {
       return error(res, 'Akun Anda telah dinonaktifkan', 403);
+    }
+
+    if (!user.password) {
+      return error(res, 'Akun ini terdaftar via Google, silakan gunakan tombol "Login dengan Google"', 400);
     }
 
     const valid = await comparePassword(password, user.password);
@@ -163,6 +171,10 @@ export const changePassword = async (req, res) => {
       (await findUserById(req.user.userId)).email
     );
 
+    if (!user.password) {
+      return error(res, 'Akun ini login via Google, tidak ada password untuk diubah di sini', 400);
+    }
+
     const valid = await comparePassword(old_password, user.password);
     if (!valid) return error(res, 'Password lama salah', 400);
 
@@ -213,5 +225,80 @@ export const toggleUserStatus = async (req, res) => {
   } catch (err) {
     console.error('toggleUserStatus error:', err);
     return error(res, 'Terjadi kesalahan server');
+  }
+};
+
+// ─── Google Login: Redirect ke Google ─────────────────────────────────────────
+export const googleLogin = async (req, res) => {
+  try {
+    const nonce = crypto.randomBytes(16).toString('hex');
+    const url = getLoginUrl(nonce);
+    return res.redirect(url);
+  } catch (err) {
+    console.error('googleLogin error:', err);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_login_failed`);
+  }
+};
+
+// ─── Google Login: Callback dari Google ────────────────────────────────────────
+export const googleLoginCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+
+    if (!code) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_login_failed`);
+    }
+
+    const { profile } = await exchangeCodeForProfile(code);
+    // profile: { id, email, name, picture, verified_email, ... }
+
+    let user = await findUserByGoogleId(profile.id);
+
+    if (!user) {
+      user = await findUserByEmail(profile.email);
+
+      if (user) {
+        // User sudah ada (register manual), tinggal link google_id-nya
+        await linkGoogleId(user.id, profile.id);
+      } else {
+        // User belum ada sama sekali — hanya izinkan kalau sudah ada ADMIN
+        const adminCount = await countByRole('ADMIN');
+        if (adminCount === 0) {
+          return res.redirect(`${process.env.FRONTEND_URL}/login?error=no_admin_registered`);
+        }
+
+        user = await createUser({
+          username: profile.email.split('@')[0],
+          full_name: profile.name,
+          email: profile.email,
+          password: null,
+          role: 'STAFF_GUDANG', // default role, silakan sesuaikan
+          google_id: profile.id,
+        });
+      }
+    }
+
+    if (!user.is_active) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=account_disabled`);
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+    );
+
+    await addLoginHistory({
+      userId: user.id,
+      action: 'LOGIN',
+      status: 'SUCCESS',
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/callback#token=${token}`);
+  } catch (err) {
+    console.error('googleLoginCallback error:', err);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_login_failed`);
   }
 };
