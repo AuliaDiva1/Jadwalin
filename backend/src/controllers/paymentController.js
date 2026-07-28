@@ -6,36 +6,45 @@ const snap = new midtransClient.Snap({
   serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
+/**
+ * 1. Buat transaksi checkout berdasarkan plan_id
+ * Endpoint: POST /api/payments/checkout
+ */
 export const createPaymentController = async (req, res) => {
   try {
-    const { amount, user_id } = req.body;
+    const { plan_id, user_id } = req.body;
 
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ success: false, message: 'Jumlah pembayaran tidak valid' });
+    if (!plan_id || !user_id) {
+      return res.status(400).json({ success: false, message: 'plan_id dan user_id wajib diisi' });
+    }
+
+    const plan = await db('subscription_plans').where({ id: plan_id, is_active: true }).first();
+    if (!plan) {
+      return res.status(404).json({ success: false, message: 'Plan tidak ditemukan' });
     }
 
     const order_id = `ORD-${Date.now()}`;
 
     await db('orders').insert({
       order_id,
-      user_id: user_id ?? null,
-      gross_amount: amount,
+      user_id,
+      plan_id: plan.id,
+      gross_amount: plan.price,
       status: 'pending',
     });
 
     const parameter = {
       transaction_details: {
         order_id,
-        gross_amount: Number(amount),
+        gross_amount: Number(plan.price),
       },
-      enabled_payments: [
-        'bca_va',
-        'bni_va',
-        'bri_va',
-        'mandiri_va',
-        'permata_va',
-        'other_va',
-      ],
+      item_details: [{
+        id: String(plan.id),
+        price: Number(plan.price),
+        quantity: 1,
+        name: `Langganan ${plan.name}`,
+      }],
+      enabled_payments: ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va', 'other_va'],
     };
 
     const transaction = await snap.createTransaction(parameter);
@@ -54,6 +63,10 @@ export const createPaymentController = async (req, res) => {
   }
 };
 
+/**
+ * 2. Webhook notification dari Midtrans, sekaligus aktifkan subscription
+ * Endpoint: POST /api/payments/notification
+ */
 export const handlePaymentNotification = async (req, res) => {
   try {
     const statusResponse = await snap.transaction.notification(req.body);
@@ -70,7 +83,6 @@ export const handlePaymentNotification = async (req, res) => {
 
     let bankName = null;
     let vaNumber = null;
-
     if (statusResponse.va_numbers && statusResponse.va_numbers.length > 0) {
       bankName = statusResponse.va_numbers[0].bank;
       vaNumber = statusResponse.va_numbers[0].va_number;
@@ -88,12 +100,39 @@ export const handlePaymentNotification = async (req, res) => {
         updated_at: new Date(),
       });
 
+    if (newStatus === 'settlement') {
+      const order = await db('orders').where({ order_id: orderId }).first();
+      const plan = await db('subscription_plans').where({ id: order.plan_id }).first();
+
+      if (order && plan) {
+        const currentUser = await db('users').where({ id: order.user_id }).first();
+        const now = new Date();
+        const baseDate =
+          currentUser?.subscription_expires_at && new Date(currentUser.subscription_expires_at) > now
+            ? new Date(currentUser.subscription_expires_at)
+            : now;
+
+        const expiresAt = new Date(baseDate);
+        expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
+
+        await db('users').where({ id: order.user_id }).update({
+          subscription_status: 'active',
+          subscription_plan_id: plan.id,
+          subscription_expires_at: expiresAt,
+        });
+      }
+    }
+
     res.status(200).json({ success: true, message: 'Notification handled successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+/**
+ * 3. Cek status transaksi berdasarkan order_id
+ * Endpoint: GET /api/payments/:order_id
+ */
 export const getPaymentStatusController = async (req, res) => {
   try {
     const { order_id } = req.params;
