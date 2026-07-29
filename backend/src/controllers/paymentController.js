@@ -166,6 +166,7 @@ export const getPaymentHistoryController = async (req, res) => {
 
     res.json({ success: true, data: orders });
   } catch (err) {
+    console.error('GET /payments/history error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
