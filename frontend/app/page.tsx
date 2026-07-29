@@ -121,61 +121,61 @@ export default function LandingERP() {
     };
   }, [moveDrag, endDrag]);
 
-  /* ── DATA ── */
+  /* ── DATA (copy diringkas, fokus manfaat bukan istilah teknis) ── */
   const features = [
-    { title: 'Penjadwalan Otomatis', desc: 'Jadwal produksi dibuat otomatis berbasis Fuzzy Mamdani dan CCEA. Tidak ada lagi penjadwalan manual yang rawan error.', icon: 'pi-calendar' },
-    { title: 'Prioritas Job Cerdas', desc: 'Setiap job diberi skor prioritas berdasarkan processing time, konsumsi energi, dan ketersediaan mesin secara real-time.', icon: 'pi-bolt' },
-    { title: 'Minimasi Makespan', desc: 'CCEA mengoptimalkan urutan pengerjaan dan alokasi mesin untuk menghasilkan makespan paling minimal.', icon: 'pi-chart-line' },
-    { title: 'Notifikasi Stok Otomatis', desc: 'Sistem mendeteksi stok bahan baku kritis dan mengirim notifikasi pengadaan secara otomatis ke Staff Gudang.', icon: 'pi-bell' },
+    { title: 'Jadwal Produksi Otomatis', desc: 'Cukup input pesanan, sistem langsung menyusun jadwal produksi paling efisien untuk Anda. Tidak perlu lagi hitung manual pakai spreadsheet.', icon: 'pi-calendar' },
+    { title: 'Prioritas Pesanan Otomatis', desc: 'Sistem tahu mana pesanan yang harus didahulukan berdasarkan waktu, mesin, dan urgensi — tanpa Anda perlu mikir urutan mana yang benar.', icon: 'pi-bolt' },
+    { title: 'Waktu Produksi Lebih Singkat', desc: 'Susunan jadwal dioptimalkan otomatis supaya mesin bekerja lebih efisien dan pesanan selesai lebih cepat.', icon: 'pi-chart-line' },
+    { title: 'Notifikasi Stok Otomatis', desc: 'Begitu bahan baku menipis, tim gudang langsung dapat notifikasi otomatis. Tidak ada lagi produksi terhenti karena stok habis mendadak.', icon: 'pi-bell' },
   ];
 
   const modules = [
-    { label: 'Production Scheduling', icon: 'pi-calendar-plus', desc: 'Inti sistem. Mengelola job order, menjalankan pipeline Fuzzy Mamdani dan CCEA, menghasilkan Gantt Chart jadwal produksi.', color: '#4f46e5' },
-    { label: 'Inventory', icon: 'pi-box', desc: 'Validator ketersediaan bahan baku setiap kali job order masuk. Stok selalu ter-update real-time.', color: '#0891b2' },
-    { label: 'Purchasing', icon: 'pi-shopping-cart', desc: 'Pemicu notifikasi pengadaan otomatis ketika stok bahan baku berada di bawah batas minimum.', color: '#7c3aed' },
+    { label: 'Penjadwalan Produksi', icon: 'pi-calendar-plus', desc: 'Pusat kendali utama. Kelola semua pesanan produksi dan lihat jadwal dalam tampilan visual yang mudah dipahami.', color: '#4f46e5' },
+    { label: 'Manajemen Stok', icon: 'pi-box', desc: 'Setiap pesanan otomatis dicek ketersediaan bahan bakunya. Stok Anda selalu ter-update secara real-time.', color: '#0891b2' },
+    { label: 'Pengadaan Barang', icon: 'pi-shopping-cart', desc: 'Notifikasi pengadaan otomatis muncul begitu stok bahan baku mendekati batas minimum, tanpa perlu dicek manual tiap hari.', color: '#7c3aed' },
   ];
 
   const roles = [
-    { label: 'Administrator', icon: 'pi-shield', desc: 'Mengelola data master, konfigurasi parameter Fuzzy Mamdani dan CCEA, memantau seluruh aktivitas sistem via dashboard.', color: '#4f46e5' },
-    { label: 'Manajer Produksi', icon: 'pi-users', desc: 'Menginput job order, memantau pipeline algoritma, memvalidasi jadwal produksi, dan melihat Gantt Chart hasil optimasi.', color: '#0891b2' },
-    { label: 'Staff Gudang', icon: 'pi-warehouse', desc: 'Mengelola stok bahan baku, menerima notifikasi kekurangan stok, dan melakukan konfirmasi pengadaan barang.', color: '#7c3aed' },
+    { label: 'Pemilik / Admin', icon: 'pi-shield', desc: 'Pantau seluruh aktivitas produksi dari satu dashboard. Atur data master dan lihat performa pabrik kapan saja.', color: '#4f46e5' },
+    { label: 'Manajer Produksi', icon: 'pi-users', desc: 'Input pesanan baru, pantau jalannya produksi, dan lihat jadwal dalam tampilan visual yang jelas untuk tim lapangan.', color: '#0891b2' },
+    { label: 'Staff Gudang', icon: 'pi-warehouse', desc: 'Kelola stok bahan baku, terima notifikasi otomatis saat stok menipis, dan konfirmasi pengadaan barang dengan mudah.', color: '#7c3aed' },
   ];
 
   const pricingPlans: PricingPlan[] = [
     {
-      name: 'Starter', price: 'Rp 1.500.000', period: '/bulan', pilotPrice: 'Rp 1.050.000',
+      name: 'Starter', price: 'Rp 249.000', period: '/bulan', pilotPrice: 'Rp 174.000',
       tagline: 'Ideal untuk IKM yang baru memulai digitalisasi',
       color: '#0ea5e9', accentColor: '#bae6fd', badge: null,
       features: [
-        { text: 'Penjadwalan otomatis dasar', included: true },
-        { text: 'Gantt Chart visual', included: true },
+        { text: 'Jadwal produksi otomatis', included: true },
+        { text: 'Tampilan jadwal visual (Gantt Chart)', included: true },
         { text: 'Notifikasi stok bahan baku', included: true },
-        { text: 'Dashboard lantai produksi', included: true },
-        { text: 'Prioritas job Fuzzy Mamdani', included: true },
-        { text: 'Prediksi durasi otomatis', included: false },
-        { text: 'Optimasi mesin CCEA', included: false },
+        { text: 'Dashboard pemantauan produksi', included: true },
+        { text: 'Prioritas pesanan otomatis', included: true },
+        { text: 'Prediksi waktu selesai otomatis', included: false },
+        { text: 'Optimasi jadwal tingkat lanjut', included: false },
         { text: 'Multi-lokasi & laporan analitik', included: false },
-        { text: 'Akses API & integrasi ERP', included: false },
+        { text: 'Akses API & integrasi sistem lain', included: false },
       ],
     },
     {
-      name: 'Growth', price: 'Rp 2.000.000', period: '/bulan', pilotPrice: 'Rp 1.400.000',
+      name: 'Growth', price: 'Rp 399.000', period: '/bulan', pilotPrice: 'Rp 279.000',
       tagline: 'Untuk pabrik yang sedang berkembang pesat',
       color: '#4f46e5', accentColor: '#c7d2fe', badge: 'Paling Populer',
       features: [
         { text: 'Semua fitur Starter', included: true },
-        { text: 'Prediksi durasi otomatis', included: true },
-        { text: 'Prioritas job Fuzzy Mamdani', included: true },
-        { text: 'Optimasi mesin paralel (CCEA)', included: true },
+        { text: 'Prediksi waktu selesai otomatis', included: true },
+        { text: 'Prioritas pesanan otomatis', included: true },
+        { text: 'Optimasi jadwal tingkat lanjut', included: true },
         { text: 'Multi-lokasi produksi', included: true },
         { text: 'Laporan analitik mingguan', included: true },
         { text: 'Dukungan prioritas', included: true },
-        { text: 'Akses API & integrasi ERP', included: false },
+        { text: 'Akses API & integrasi sistem lain', included: false },
         { text: 'Dedicated account manager', included: false },
       ],
     },
     {
-      name: 'Pro', price: 'Rp 3.500.000', period: '/bulan', pilotPrice: 'Rp 2.450.000',
+      name: 'Pro', price: 'Rp 599.000', period: '/bulan', pilotPrice: 'Rp 419.000',
       tagline: 'Solusi lengkap untuk Industri Menengah ke Atas',
       color: '#7c3aed', accentColor: '#ddd6fe', badge: null,
       features: [
@@ -184,21 +184,24 @@ export default function LandingERP() {
         { text: 'Laporan analitik kustom', included: true },
         { text: 'SLA uptime terjamin', included: true },
         { text: 'Dedicated account manager', included: true },
-        { text: 'Training on-site tim produksi', included: true },
-        { text: 'Integrasi ERP eksternal', included: true },
-        { text: 'Konfigurasi parameter kustom', included: true },
+        { text: 'Training on-site untuk tim produksi', included: true },
+        { text: 'Integrasi dengan sistem eksternal', included: true },
+        { text: 'Konfigurasi sesuai kebutuhan pabrik', included: true },
         { text: 'Onboarding diprioritaskan', included: true },
       ],
     },
   ];
 
   const faqs = [
-    { q: 'Apa itu Fuzzy Mamdani dalam sistem ini?', a: 'Fuzzy Mamdani digunakan untuk menentukan skor prioritas setiap job berdasarkan tiga variabel: processing time, energy consumption, dan machine availability. Hasilnya digunakan sebagai populasi awal CCEA.' },
-    { q: 'Apa itu CCEA dan kenapa dipilih?', a: 'Cooperative Co-Evolution Algorithm adalah algoritma evolusioner yang memecah masalah penjadwalan menjadi sub-komponen paralel. Dipilih karena lebih efektif menghindari local optimum dibanding Genetic Algorithm atau PSO.' },
-    { q: 'Bagaimana sistem menentukan deadline job?', a: 'Deadline diprediksi otomatis oleh model prediksi yang dilatih dari data historis Actual_End. Operator tidak perlu input deadline secara manual.' },
-    { q: 'Apa output akhir dari sistem ini?', a: 'Output utama adalah Gantt Chart jadwal produksi yang menampilkan urutan pengerjaan tiap job per mesin, beserta nilai makespan hasil optimasi CCEA.' },
-    { q: 'Siapa saja yang bisa mengakses sistem ini?', a: 'Sistem dapat diakses oleh tiga peran: Administrator, Manajer Produksi, dan Staff Gudang. Masing-masing memiliki hak akses yang berbeda sesuai tanggung jawabnya.' },
+    { q: 'Bagaimana cara sistem ini menyusun jadwal produksi?', a: 'Anda cukup input pesanan (jenis pekerjaan, tenggat waktu, mesin yang dipakai), lalu sistem otomatis menyusun urutan pengerjaan yang paling efisien — tanpa perlu hitung manual.' },
+    { q: 'Bagaimana sistem menentukan pesanan mana yang didahulukan?', a: 'Sistem otomatis menilai setiap pesanan berdasarkan waktu pengerjaan, urgensi, dan ketersediaan mesin, lalu menyusun prioritas terbaik secara otomatis.' },
+    { q: 'Apakah saya perlu input tanggal target selesai secara manual?', a: 'Tidak. Sistem memprediksi otomatis kapan sebuah pesanan diperkirakan selesai berdasarkan riwayat produksi sebelumnya.' },
+    { q: 'Apa yang saya lihat setelah jadwal dibuat?', a: 'Anda akan melihat tampilan visual (Gantt Chart) yang menunjukkan urutan pengerjaan tiap pesanan di setiap mesin, lengkap dengan estimasi waktu selesai produksi.' },
+    { q: 'Siapa saja yang bisa menggunakan sistem ini di perusahaan saya?', a: 'Sistem mendukung tiga jenis pengguna: Admin/Pemilik, Manajer Produksi, dan Staff Gudang — masing-masing dengan akses yang sesuai perannya.' },
+    { q: 'Apakah data produksi saya aman?', a: 'Ya. Setiap akun punya akses yang terpisah dan aman, serta data disimpan di server dengan enkripsi standar industri.' },
   ];
+
+  const goToLogin = () => router.push('/login');
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#ffffff', color: '#1e293b', overflowX: 'hidden' }}>
@@ -393,7 +396,6 @@ export default function LandingERP() {
         transition:'all 0.35s',
       }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0 }}>
-          {/* ── LOGO: ganti pi-cog → logo-white.svg ── */}
           <div
             style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#4f46e5,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(79,70,229,0.4)', transition:'transform 0.2s', cursor:'pointer', flexShrink:0 }}
             onMouseEnter={e=>(e.currentTarget.style.transform='rotate(-8deg) scale(1.08)')}
@@ -420,14 +422,13 @@ export default function LandingERP() {
         </div>
 
         <div className="hide-mobile" style={{display:'flex',gap:8,flexShrink:0}}>
-          <button onClick={()=>router.push('/auth/login')}
+          <button onClick={goToLogin}
             style={{padding:'9px 22px',borderRadius:8,border:'1.5px solid #e2e8f0',background:'transparent',fontWeight:600,fontSize:'0.875rem',cursor:'pointer',color:'#374151',fontFamily:"'Poppins',sans-serif",transition:'all 0.2s',whiteSpace:'nowrap'}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor='#4f46e5';e.currentTarget.style.color='#4f46e5';e.currentTarget.style.background='#f0f0ff';}}
             onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.color='#374151';e.currentTarget.style.background='transparent';}}
           >Masuk</button>
         </div>
 
-        {/* Hamburger — hanya tampil di layar ≤1024px */}
         <button
           className="show-mobile"
           aria-label="Buka menu"
@@ -445,13 +446,13 @@ export default function LandingERP() {
         ))}
         <div style={{display:'flex',gap:8,marginTop:14}}>
           <button
-            onClick={()=>{ setMobileMenuOpen(false); router.push('/auth/login'); }}
+            onClick={()=>{ setMobileMenuOpen(false); goToLogin(); }}
             style={{flex:1,padding:'12px',borderRadius:8,border:'1.5px solid #e2e8f0',background:'#fff',fontWeight:600,fontSize:'0.9rem',cursor:'pointer',color:'#374151',fontFamily:"'Poppins',sans-serif"}}
           >
             Masuk
           </button>
           <button
-            onClick={()=>{ setMobileMenuOpen(false); router.push('/auth/login'); }}
+            onClick={()=>{ setMobileMenuOpen(false); goToLogin(); }}
             className="shimmer-btn"
             style={{flex:1,padding:12,borderRadius:8,border:'none',color:'#fff',fontWeight:600,fontSize:'0.9rem',cursor:'pointer',fontFamily:"'Poppins',sans-serif"}}
           >
@@ -465,7 +466,7 @@ export default function LandingERP() {
         <div className="ticker-wrap">
           <div className="ticker-inner">
             {[...Array(3)].map((_,oi)=>
-              ['Fuzzy Mamdani','CCEA Optimizer','Gantt Chart','Prediksi Durasi','Real-time Inventory','Smart Scheduling','Minimasi Makespan','Auto Notifikasi'].map((item,idx)=>(
+              ['Jadwal Otomatis','Tampilan Visual','Prediksi Selesai','Stok Real-time','Notifikasi Otomatis','Produksi Lebih Cepat','Laporan Analitik','Kurangi Kesalahan Manual'].map((item,idx)=>(
                 <span key={`${oi}-${idx}`} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'0 32px',color:'rgba(255,255,255,0.85)',fontSize:'0.75rem',fontWeight:500}}>
                   <span style={{width:4,height:4,borderRadius:'50%',background:'rgba(255,255,255,0.5)',display:'inline-block'}}/>
                   {item}
@@ -487,36 +488,36 @@ export default function LandingERP() {
             <div>
               <div style={{display:'inline-flex',alignItems:'center',gap:8,marginBottom:28,background:'linear-gradient(135deg,rgba(79,70,229,0.08),rgba(124,58,237,0.08))',border:'1px solid rgba(79,70,229,0.2)',borderRadius:99,padding:'6px 16px 6px 8px',animation:'fadeIn 0.6s ease both'}}>
                 <div style={{background:'linear-gradient(135deg,#4f46e5,#7c3aed)',borderRadius:99,padding:'3px 10px',display:'flex',alignItems:'center',gap:5}}>
-                  <i className="pi pi-graduation-cap" style={{color:'#fff',fontSize:'0.65rem'}}/>
-                  <span style={{fontSize:'0.7rem',fontWeight:700,color:'#fff'}}>D3 Teknik Informatika</span>
+                  <i className="pi pi-verified" style={{color:'#fff',fontSize:'0.65rem'}}/>
+                  <span style={{fontSize:'0.7rem',fontWeight:700,color:'#fff'}}>Solusi ERP Manufaktur</span>
                 </div>
-                <span style={{fontSize:'0.78rem',fontWeight:600,color:'#4f46e5'}}>Universitas Sebelas Maret</span>
+                <span style={{fontSize:'0.78rem',fontWeight:600,color:'#4f46e5'}}>Dibuat untuk pabrik skala kecil - menengah</span>
               </div>
 
               <h1 className="hero-title" style={{fontSize:'clamp(2.2rem,5vw,3.6rem)',fontWeight:800,lineHeight:1.12,letterSpacing:'-0.03em',color:'#0f172a',marginBottom:20}}>
-                Penjadwalan Produksi<br/>
-                <span className="gradient-text">Lebih Cerdas & Optimal</span>
+                Atur Jadwal Produksi<br/>
+                <span className="gradient-text">Tanpa Ribet, Otomatis</span>
               </h1>
 
               <p className="hero-sub" style={{fontSize:'1rem',color:'#475569',lineHeight:1.85,marginBottom:36,maxWidth:490}}>
-                Modul penjadwalan produksi pada sistem ERP manufaktur menggunakan <strong style={{color:'#4f46e5'}}>Logika Fuzzy Mamdani</strong> untuk prioritas job dan <strong style={{color:'#7c3aed'}}>CCEA</strong> untuk minimasi makespan.
+                Sistem yang membantu pabrik Anda <strong style={{color:'#4f46e5'}}>menyusun jadwal produksi otomatis</strong>, <strong style={{color:'#7c3aed'}}>menentukan prioritas pesanan</strong>, dan mengelola stok — semua dari satu dashboard yang mudah dipakai.
               </p>
 
               <div className="hero-cta" style={{display:'flex',gap:12,flexWrap:'wrap'}}>
-                <button onClick={()=>router.push('/auth/login')} className="shimmer-btn"
+                <button onClick={goToLogin} className="shimmer-btn"
                   style={{padding:'14px 30px',borderRadius:12,border:'none',color:'#fff',fontWeight:700,fontSize:'0.95rem',cursor:'pointer',fontFamily:"'Poppins',sans-serif",display:'flex',alignItems:'center',gap:8,boxShadow:'0 8px 28px rgba(79,70,229,0.4)'}}>
-                  <i className="pi pi-sign-in"/> Masuk ke Sistem
+                  <i className="pi pi-sign-in"/> Coba Sekarang
                 </button>
                 <button onClick={()=>document.getElementById('fitur')?.scrollIntoView({behavior:'smooth'})}
                   style={{padding:'14px 30px',borderRadius:12,border:'2px solid #e2e8f0',background:'#fff',fontWeight:600,fontSize:'0.95rem',cursor:'pointer',color:'#374151',fontFamily:"'Poppins',sans-serif",display:'flex',alignItems:'center',gap:8,transition:'all 0.25s'}}
                   onMouseEnter={e=>{e.currentTarget.style.borderColor='#4f46e5';e.currentTarget.style.color='#4f46e5';e.currentTarget.style.background='#f8f7ff';e.currentTarget.style.transform='translateY(-2px)';}}
                   onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.color='#374151';e.currentTarget.style.background='#fff';e.currentTarget.style.transform='translateY(0)';}}>
-                  <i className="pi pi-info-circle"/> Pelajari Lebih Lanjut
+                  <i className="pi pi-info-circle"/> Lihat Fitur
                 </button>
               </div>
 
               <div className="hero-badges" style={{display:'flex',gap:20,marginTop:36,flexWrap:'wrap'}}>
-                {[{label:'Fuzzy Mamdani',icon:'pi-sliders-h',color:'#4f46e5'},{label:'CCEA Optimizer',icon:'pi-chart-line',color:'#7c3aed'},{label:'Gantt Chart',icon:'pi-calendar',color:'#0891b2'}].map((b,i)=>(
+                {[{label:'Jadwal Otomatis',icon:'pi-sliders-h',color:'#4f46e5'},{label:'Produksi Lebih Cepat',icon:'pi-chart-line',color:'#7c3aed'},{label:'Tampilan Visual',icon:'pi-calendar',color:'#0891b2'}].map((b,i)=>(
                   <div key={b.label} style={{display:'flex',alignItems:'center',gap:7,color:'#64748b',fontSize:'0.82rem',animation:`fadeUp 0.6s ${0.5+i*0.1}s both`}}>
                     <div style={{width:26,height:26,borderRadius:6,background:`${b.color}12`,display:'flex',alignItems:'center',justifyContent:'center'}}>
                       <i className={`pi ${b.icon}`} style={{color:b.color,fontSize:'0.7rem'}}/>
@@ -534,14 +535,14 @@ export default function LandingERP() {
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:8,height:8,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 0 3px rgba(34,197,94,0.2)'}}/>
-                      <span style={{fontWeight:700,fontSize:'0.92rem',color:'#0f172a'}}>Gantt Chart Produksi</span>
+                      <span style={{fontWeight:700,fontSize:'0.92rem',color:'#0f172a'}}>Jadwal Produksi</span>
                     </div>
                     <span style={{background:'linear-gradient(135deg,#dcfce7,#bbf7d0)',color:'#16a34a',fontSize:'0.7rem',fontWeight:700,padding:'4px 12px',borderRadius:99}}>Live</span>
                   </div>
                   {[
-                    {machine:'Mesin A',jobs:[{w:'35%',color:'#4f46e5',label:'JOB-001'},{w:'25%',color:'#7c3aed',label:'JOB-003'}]},
-                    {machine:'Mesin B',jobs:[{w:'20%',color:'#0891b2',label:'JOB-002'},{w:'40%',color:'#4f46e5',label:'JOB-005'}]},
-                    {machine:'Mesin C',jobs:[{w:'50%',color:'#7c3aed',label:'JOB-004'},{w:'20%',color:'#0891b2',label:'JOB-006'}]},
+                    {machine:'Mesin A',jobs:[{w:'35%',color:'#4f46e5',label:'PO-001'},{w:'25%',color:'#7c3aed',label:'PO-003'}]},
+                    {machine:'Mesin B',jobs:[{w:'20%',color:'#0891b2',label:'PO-002'},{w:'40%',color:'#4f46e5',label:'PO-005'}]},
+                    {machine:'Mesin C',jobs:[{w:'50%',color:'#7c3aed',label:'PO-004'},{w:'20%',color:'#0891b2',label:'PO-006'}]},
                   ].map((row,i)=>(
                     <div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
                       <span style={{fontSize:'0.7rem',color:'#64748b',fontWeight:600,minWidth:62}}>{row.machine}</span>
@@ -557,7 +558,7 @@ export default function LandingERP() {
                   <div style={{marginTop:18,padding:'12px 16px',background:'linear-gradient(135deg,#f8faff,#f5f3ff)',borderRadius:10,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       <i className="pi pi-clock" style={{color:'#4f46e5',fontSize:'0.8rem'}}/>
-                      <span style={{fontSize:'0.75rem',color:'#64748b',fontWeight:500}}>Makespan Optimal</span>
+                      <span style={{fontSize:'0.75rem',color:'#64748b',fontWeight:500}}>Waktu Produksi</span>
                     </div>
                     <span style={{fontSize:'0.9rem',fontWeight:800,color:'#4f46e5'}}>160 menit</span>
                   </div>
@@ -567,7 +568,7 @@ export default function LandingERP() {
                 <div style={{fontSize:'0.62rem',color:'#94a3b8',fontWeight:700,marginBottom:5,textTransform:'uppercase',letterSpacing:'0.05em'}}>Skor Prioritas</div>
                 <div style={{fontSize:'1.6rem',fontWeight:800,color:'#0f172a',lineHeight:1}}>87.3</div>
                 <div style={{fontSize:'0.68rem',color:'#4f46e5',fontWeight:600,marginTop:4,display:'flex',alignItems:'center',gap:4}}>
-                  <i className="pi pi-check-circle" style={{fontSize:'0.68rem'}}/> Fuzzy Mamdani
+                  <i className="pi pi-check-circle" style={{fontSize:'0.68rem'}}/> Otomatis dihitung
                 </div>
               </div>
               <div className="float-b" style={{position:'absolute',top:-20,right:-20,background:'linear-gradient(135deg,#1e1b4b,#4f46e5)',borderRadius:16,padding:'14px 18px',boxShadow:'0 12px 40px rgba(79,70,229,0.4)',minWidth:140}}>
@@ -583,7 +584,7 @@ export default function LandingERP() {
       {/* ══════════════ STATS BAR ══════════════ */}
       <section style={{background:'#0f172a',padding:'32px 32px'}}>
         <div style={{maxWidth:900,margin:'0 auto',display:'flex',justifyContent:'space-around',flexWrap:'wrap',gap:24}}>
-          {[{val:'27',unit:'Rules',label:'Fuzzy IF-THEN',color:'#818cf8'},{val:'3',unit:'Modul',label:'Terintegrasi Penuh',color:'#67e8f9'},{val:'3',unit:'Peran',label:'Akses Sistem',color:'#c4b5fd'}].map((s,i)=>(
+          {[{val:'100%',unit:'',label:'Jadwal Dibuat Otomatis',color:'#818cf8'},{val:'3',unit:'Modul',label:'Terintegrasi Penuh',color:'#67e8f9'},{val:'3',unit:'Peran',label:'Akses Sistem',color:'#c4b5fd'}].map((s,i)=>(
             <div key={i} className="stat-item" style={{textAlign:'center'}}>
               <div style={{fontSize:'2.4rem',fontWeight:800,color:s.color,lineHeight:1,letterSpacing:'-0.03em'}}>
                 {s.val}<span style={{fontSize:'1rem',fontWeight:600,color:`${s.color}88`,marginLeft:3}}>{s.unit}</span>
@@ -599,8 +600,8 @@ export default function LandingERP() {
         <div style={{maxWidth:1200,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:60}}>
             <div style={{display:'inline-block',background:'#f0f4ff',color:'#4f46e5',borderRadius:8,padding:'4px 14px',fontSize:'0.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14}}>Fitur Unggulan</div>
-            <h2 style={{fontSize:'clamp(1.8rem,4vw,2.6rem)',fontWeight:800,color:'#0f172a',marginBottom:14,letterSpacing:'-0.02em'}}>Mengapa Sistem Ini Berbeda?</h2>
-            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.75}}>Kombinasi Fuzzy Mamdani dan CCEA menghasilkan jadwal produksi yang adaptif sekaligus optimal.</p>
+            <h2 style={{fontSize:'clamp(1.8rem,4vw,2.6rem)',fontWeight:800,color:'#0f172a',marginBottom:14,letterSpacing:'-0.02em'}}>Mengapa Pabrik Anda Butuh Ini?</h2>
+            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.75}}>Semua yang Anda butuhkan untuk mengatur produksi tanpa ribet, dalam satu sistem yang mudah dipakai.</p>
           </div>
           <div className="grid-4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20}}>
             {features.map((f,i)=>(
@@ -622,7 +623,7 @@ export default function LandingERP() {
           <div style={{textAlign:'center',marginBottom:60}}>
             <div style={{display:'inline-block',background:'#f0f4ff',color:'#4f46e5',borderRadius:8,padding:'4px 14px',fontSize:'0.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14}}>Modul Terintegrasi</div>
             <h2 style={{fontSize:'clamp(1.8rem,4vw,2.6rem)',fontWeight:800,color:'#0f172a',marginBottom:14,letterSpacing:'-0.02em'}}>Tiga Modul, Satu Ekosistem</h2>
-            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.75}}>Production Scheduling sebagai inti, didukung Inventory dan Purchasing yang bekerja selaras.</p>
+            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.75}}>Penjadwalan sebagai pusatnya, didukung Stok dan Pengadaan yang bekerja selaras secara otomatis.</p>
           </div>
           <div className="grid-3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24}}>
             {modules.map((m,i)=>(
@@ -644,17 +645,17 @@ export default function LandingERP() {
         <div style={{maxWidth:900,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:60}}>
             <div style={{display:'inline-block',background:'#f0f4ff',color:'#4f46e5',borderRadius:8,padding:'4px 14px',fontSize:'0.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14}}>Alur Sistem</div>
-            <h2 style={{fontSize:'clamp(1.8rem,4vw,2.6rem)',fontWeight:800,color:'#0f172a',marginBottom:14,letterSpacing:'-0.02em'}}>Pipeline Algoritma</h2>
-            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.75}}>Dari input job order hingga Gantt Chart, semua berjalan otomatis dalam satu pipeline terpadu.</p>
+            <h2 style={{fontSize:'clamp(1.8rem,4vw,2.6rem)',fontWeight:800,color:'#0f172a',marginBottom:14,letterSpacing:'-0.02em'}}>Sesederhana Ini Prosesnya</h2>
+            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.75}}>Dari pesanan masuk sampai jadwal jadi, semua berjalan otomatis dalam satu alur yang mudah diikuti.</p>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:0}}>
             {[
-              {step:'01',title:'Input Job Order',desc:'Manajer Produksi menginput Processing Time, Energy Consumption, Machine Availability, dan Operation Type.',icon:'pi-plus-circle',color:'#4f46e5'},
-              {step:'02',title:'Validasi Stok',desc:'Sistem otomatis memeriksa ketersediaan bahan baku. Jika kurang, notifikasi dikirim ke Staff Gudang.',icon:'pi-box',color:'#0891b2'},
-              {step:'03',title:'Prediksi Deadline',desc:'Model prediksi memprediksi deadline setiap job secara otomatis dari data historis.',icon:'pi-clock',color:'#7c3aed'},
-              {step:'04',title:'Fuzzy Mamdani',desc:'Menghitung skor prioritas setiap job berdasarkan 27 rules IF-THEN dengan output nilai 0–100.',icon:'pi-sliders-h',color:'#0891b2'},
-              {step:'05',title:'Optimasi CCEA',desc:'Mengoptimalkan urutan pengerjaan dan alokasi mesin untuk menghasilkan makespan minimal.',icon:'pi-chart-line',color:'#4f46e5'},
-              {step:'06',title:'Gantt Chart',desc:'Jadwal produksi ditampilkan sebagai Gantt Chart. Manajer memvalidasi sebelum dijadikan jadwal final.',icon:'pi-calendar',color:'#7c3aed'},
+              {step:'01',title:'Input Pesanan',desc:'Manajer Produksi memasukkan detail pesanan: jenis pekerjaan, mesin yang dipakai, dan tenggat waktu.',icon:'pi-plus-circle',color:'#4f46e5'},
+              {step:'02',title:'Cek Ketersediaan Stok',desc:'Sistem otomatis memeriksa apakah bahan baku cukup. Jika kurang, notifikasi langsung dikirim ke Staff Gudang.',icon:'pi-box',color:'#0891b2'},
+              {step:'03',title:'Prediksi Waktu Selesai',desc:'Sistem memprediksi otomatis kapan pesanan akan selesai, berdasarkan data produksi sebelumnya.',icon:'pi-clock',color:'#7c3aed'},
+              {step:'04',title:'Susun Prioritas',desc:'Setiap pesanan dinilai otomatis untuk menentukan mana yang perlu didahulukan.',icon:'pi-sliders-h',color:'#0891b2'},
+              {step:'05',title:'Optimasi Jadwal',desc:'Urutan pengerjaan dan penggunaan mesin diatur otomatis agar produksi selesai secepat mungkin.',icon:'pi-chart-line',color:'#4f46e5'},
+              {step:'06',title:'Jadwal Siap Dipakai',desc:'Jadwal produksi ditampilkan secara visual dan mudah dibaca. Manajer tinggal cek dan konfirmasi.',icon:'pi-calendar',color:'#7c3aed'},
             ].map((s,i,arr)=>(
               <div key={i} style={{display:'flex',gap:24,position:'relative',animation:`slideInLeft 0.7s ${0.1+i*0.1}s both`}}>
                 <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
@@ -821,7 +822,7 @@ export default function LandingERP() {
                     </div>
 
                     <button
-                      onClick={e=>{ e.stopPropagation(); router.push('/auth/login'); }}
+                      onClick={e=>{ e.stopPropagation(); goToLogin(); }}
                       onMouseDown={e=>e.stopPropagation()}
                       style={{width:'100%',padding:'13px 20px',borderRadius:12,border:'none',background:`linear-gradient(135deg,${plan.color},${idx===0?'#0284c7':idx===1?'#7c3aed':'#6d28d9'})`,color:'#fff',fontWeight:700,fontSize:'0.875rem',cursor:'pointer',fontFamily:"'Poppins',sans-serif",display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:`0 6px 20px ${plan.color}40`,transition:'all 0.25s'}}
                       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 10px 28px ${plan.color}55`;}}
@@ -840,7 +841,7 @@ export default function LandingERP() {
               <div style={{width:34,height:34,borderRadius:10,background:'#f0f4ff',display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <i className="pi pi-info-circle" style={{color:'#4f46e5',fontSize:'0.85rem'}}/>
               </div>
-              <span style={{fontSize:'0.875rem',fontWeight:700,color:'#0f172a'}}>Implementation Fee (Onboarding)</span>
+              <span style={{fontSize:'0.875rem',fontWeight:700,color:'#0f172a'}}>Biaya Pemasangan Awal (Onboarding)</span>
             </div>
             <div style={{width:1,height:26,background:'#e2e8f0'}}/>
             <div style={{display:'flex',alignItems:'center',gap:6}}>
@@ -848,7 +849,7 @@ export default function LandingERP() {
               <span style={{fontSize:'0.78rem',color:'#64748b'}}>per sesi</span>
             </div>
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center'}}>
-              {['Konfigurasi sistem','Input data awal','Hak akses','Pelatihan platform'].map(item=>(
+              {['Pengaturan sistem','Input data awal','Pengaturan hak akses','Pelatihan pemakaian'].map(item=>(
                 <span key={item} style={{fontSize:'0.72rem',background:'#fff',border:'1px solid #e2e8f0',color:'#64748b',padding:'4px 12px',borderRadius:99,fontWeight:500}}>✓ {item}</span>
               ))}
             </div>
@@ -893,9 +894,9 @@ export default function LandingERP() {
           <div style={{position:'absolute',top:-100,right:-100,width:350,height:350,borderRadius:'50%',background:'rgba(255,255,255,0.04)',pointerEvents:'none'}}/>
           <div style={{position:'absolute',bottom:-60,left:-60,width:250,height:250,borderRadius:'50%',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
           <div style={{position:'relative',zIndex:1}}>
-            <h2 style={{fontSize:'clamp(1.8rem,4vw,3rem)',fontWeight:800,color:'#fff',marginBottom:18,letterSpacing:'-0.025em',lineHeight:1.15}}>Siap Optimasi Produksi?</h2>
-            <p style={{color:'rgba(199,210,254,0.9)',fontSize:'1rem',marginBottom:36,maxWidth:480,margin:'0 auto 36px',lineHeight:1.8}}>Masuk ke sistem dan mulai kelola jadwal produksi manufaktur Anda secara cerdas dan efisien.</p>
-            <button onClick={()=>router.push('/auth/login')}
+            <h2 style={{fontSize:'clamp(1.8rem,4vw,3rem)',fontWeight:800,color:'#fff',marginBottom:18,letterSpacing:'-0.025em',lineHeight:1.15}}>Siap Bikin Produksi Lebih Lancar?</h2>
+            <p style={{color:'rgba(199,210,254,0.9)',fontSize:'1rem',marginBottom:36,maxWidth:480,margin:'0 auto 36px',lineHeight:1.8}}>Masuk ke sistem dan mulai kelola jadwal produksi pabrik Anda secara otomatis, cepat, dan tanpa ribet.</p>
+            <button onClick={goToLogin}
               style={{padding:'15px 40px',borderRadius:14,border:'none',background:'#fff',color:'#4f46e5',fontWeight:800,fontSize:'1rem',cursor:'pointer',fontFamily:"'Poppins',sans-serif",boxShadow:'0 12px 32px rgba(0,0,0,0.2)',transition:'transform 0.25s,box-shadow 0.25s',display:'inline-flex',alignItems:'center',gap:8}}
               onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px) scale(1.02)';e.currentTarget.style.boxShadow='0 20px 48px rgba(0,0,0,0.28)';}}
               onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0) scale(1)';e.currentTarget.style.boxShadow='0 12px 32px rgba(0,0,0,0.2)';}}>
@@ -910,7 +911,6 @@ export default function LandingERP() {
         <div style={{maxWidth:1200,margin:'0 auto'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:20,marginBottom:24}}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
-              {/* ── LOGO FOOTER: ganti pi-cog → logo-white.svg ── */}
               <div style={{width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,#4f46e5,#7c3aed)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(79,70,229,0.4)'}}>
                 <img
                   src="/layout/images/logo-white.svg"
@@ -937,7 +937,7 @@ export default function LandingERP() {
           <div style={{borderTop:'1px solid #1e293b',paddingTop:20,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
             <span style={{fontSize:'0.78rem',color:'#475569'}}>© {currentYear} ERPJadwal · D3 Teknik Informatika · Universitas Sebelas Maret</span>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <span style={{fontSize:'0.72rem',background:'#1e293b',color:'#64748b',padding:'3px 10px',borderRadius:99,fontWeight:500}}>Fuzzy Mamdani + CCEA</span>
+              <span style={{fontSize:'0.72rem',background:'#1e293b',color:'#64748b',padding:'3px 10px',borderRadius:99,fontWeight:500}}>Jadwal Otomatis</span>
               <span style={{fontSize:'0.72rem',background:'#1e293b',color:'#64748b',padding:'3px 10px',borderRadius:99,fontWeight:500}}>Next.js + Express.js</span>
             </div>
           </div>
