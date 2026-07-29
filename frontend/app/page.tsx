@@ -201,7 +201,7 @@ export default function LandingERP() {
     { q: 'Apakah data produksi saya aman?', a: 'Ya. Setiap akun punya akses yang terpisah dan aman, serta data disimpan di server dengan enkripsi standar industri.' },
   ];
 
-  const goToLogin = () => router.push('/login');
+  const goToLogin = () => router.push('/auth/login');
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#ffffff', color: '#1e293b', overflowX: 'hidden' }}>
