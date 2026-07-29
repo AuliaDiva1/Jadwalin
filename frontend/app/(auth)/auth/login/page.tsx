@@ -6,6 +6,7 @@ import axios from 'axios';
 import { roleRoutes } from '../../../../utils/roleRoutes';
 
 type ToastHandle = { showToast: (status: string, message?: string) => void };
+type Mode = 'login' | 'register';
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -17,6 +18,7 @@ const CSS = `
   @keyframes aurora1  { 0%,100% { transform:translateX(0) translateY(0) scale(1); opacity:.8; } 50% { transform:translateX(80px) translateY(-40px) scale(1.1); opacity:1; } }
   @keyframes aurora2  { 0%,100% { transform:translateX(0) translateY(0) scale(1); opacity:.7; } 50% { transform:translateX(-60px) translateY(30px) scale(1.08); opacity:.9; } }
   @keyframes aurora3  { 0%,100% { transform:translateX(0) scale(1); opacity:.6; } 50% { transform:translateX(40px) scale(1.12); opacity:.8; } }
+  @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
 
   html, body { height:100%; font-family:'Poppins',sans-serif; }
 
@@ -63,7 +65,7 @@ const CSS = `
     box-shadow:0 8px 40px rgba(109,40,217,.08);
   }
 
-  .lp-brand { display:flex; align-items:center; gap:10px; margin-bottom:32px; }
+  .lp-brand { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
   .lp-brand-ico {
     width:38px; height:38px; border-radius:10px;
     background:rgba(109,40,217,.1); border:1px solid rgba(109,40,217,.2);
@@ -72,8 +74,23 @@ const CSS = `
   .lp-brand-name { font-size:14px; font-weight:600; color:#1e1b4b; }
   .lp-brand-sub  { font-size:11px; color:#94a3b8; }
 
+  .lp-tabs {
+    display:flex; background:#f1f5f9; border-radius:12px; padding:4px;
+    margin-bottom:24px; position:relative;
+  }
+  .lp-tab {
+    flex:1; text-align:center; padding:10px 0; font-size:13.5px; font-weight:600;
+    border:none; background:transparent; cursor:pointer; border-radius:9px;
+    color:#94a3b8; transition:color .2s, background .2s;
+    font-family:'Poppins',sans-serif;
+  }
+  .lp-tab.active { background:#fff; color:#4c1d95; box-shadow:0 2px 8px rgba(109,40,217,.12); }
+  .lp-tab:disabled { cursor:not-allowed; opacity:.6; }
+
   .lp-title { font-size:1.55rem; font-weight:700; color:#0f172a; letter-spacing:-.02em; margin-bottom:6px; }
-  .lp-sub   { font-size:13px; color:#94a3b8; line-height:1.6; margin-bottom:28px; }
+  .lp-sub   { font-size:13px; color:#94a3b8; line-height:1.6; margin-bottom:24px; }
+
+  .lp-form { animation:fadeIn .3s ease both; }
 
   .lp-field { margin-bottom:14px; }
   .lp-lbl   { font-size:11.5px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.07em; margin-bottom:7px; display:block; }
@@ -106,6 +123,7 @@ const CSS = `
     padding:4px; border-radius:6px; transition:color .2s;
   }
   .lp-eye-btn:hover { color:#7c3aed; }
+  .lp-hint-err { font-size:11.5px; color:#ef4444; margin-top:6px; }
 
   .lp-btn {
     width:100%; height:48px; border-radius:10px; border:none; color:#fff;
@@ -137,7 +155,10 @@ const CSS = `
 
   .lp-footer { text-align:center; margin-top:20px; }
   .lp-footer-txt  { font-size:12px; color:#94a3b8; }
-  .lp-footer-link { font-size:12px; color:#7c3aed; text-decoration:none; font-weight:500; }
+  .lp-footer-link {
+    font-size:12px; color:#7c3aed; text-decoration:none; font-weight:600;
+    background:none; border:none; cursor:pointer; font-family:'Poppins',sans-serif;
+  }
   .lp-footer-link:hover { color:#5b21b6; text-decoration:underline; }
 
   @media (max-width:480px) {
@@ -150,16 +171,35 @@ export default function LoginPage() {
   const router   = useRouter();
   const toastRef = useRef<ToastHandle>(null);
 
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [mode, setMode] = useState<Mode>('login');
+  const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [mounted,  setMounted]  = useState(false);
+  const [showPass2, setShowPass2] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // shared
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // register-only
+  const [fullName, setFullName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const resetFields = () => {
+    setEmail(''); setPassword(''); setFullName(''); setConfirmPassword('');
+    setShowPass(false); setShowPass2(false);
+  };
+
+  const switchMode = (next: Mode) => {
+    if (loading || next === mode) return;
+    setMode(next);
+    resetFields();
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -184,9 +224,46 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toastRef.current?.showToast('01', 'Konfirmasi password tidak cocok');
+      return;
+    }
+    if (password.length < 6) {
+      toastRef.current?.showToast('01', 'Password minimal 6 karakter');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res  = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        full_name: fullName,
+        email,
+        password,
+      });
+      const data = res.data;
+      if (data.status !== 'success') {
+        toastRef.current?.showToast('01', data.message || 'Registrasi gagal');
+        setLoading(false);
+        return;
+      }
+      toastRef.current?.showToast('00', 'Akun berhasil dibuat, silakan masuk');
+      setLoading(false);
+      switchMode('login');
+      setEmail(email); // biarkan email terisi biar tinggal masukin password
+    } catch (err: any) {
+      toastRef.current?.showToast('01', err.response?.data?.message || 'Koneksi ke server gagal');
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
   };
+
+  const isLogin = mode === 'login';
 
   return (
     <>
@@ -212,46 +289,137 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <h2 className="lp-title">Masuk ke Sistem</h2>
-
-          <form onSubmit={handleSubmit} autoComplete="off">
-            <div className="lp-field">
-              <label className="lp-lbl">Email</label>
-              <div className="lp-inp-wrap">
-                <input
-                  type="email" className="lp-inp"
-                  placeholder="email@gmail.com"
-                  value={email} onChange={e => setEmail(e.target.value)}
-                  disabled={loading} required
-                />
-                <i className="pi pi-envelope lp-ico-l" />
-              </div>
-            </div>
-
-            <div className="lp-field">
-              <label className="lp-lbl">Password</label>
-              <div className="lp-inp-wrap">
-                <input
-                  type={showPass ? 'text' : 'password'} className="lp-inp"
-                  placeholder="Masukkan password Anda"
-                  value={password} onChange={e => setPassword(e.target.value)}
-                  disabled={loading} required
-                />
-                <i className="pi pi-lock lp-ico-l" />
-                <button type="button" className="lp-eye-btn"
-                  onClick={() => setShowPass(v => !v)} tabIndex={-1} disabled={loading}>
-                  <i className={`pi ${showPass ? 'pi-eye-slash' : 'pi-eye'}`} style={{ fontSize:13 }} />
-                </button>
-              </div>
-            </div>
-
-            <button type="submit" className="lp-btn" disabled={loading || !email || !password}>
-              {loading
-                ? <><div className="lp-spinner" /> Memverifikasi...</>
-                : <><i className="pi pi-sign-in" style={{ fontSize:14 }} /> Masuk ke Sistem</>
-              }
+          <div className="lp-tabs">
+            <button type="button" className={`lp-tab ${isLogin ? 'active' : ''}`}
+              onClick={() => switchMode('login')} disabled={loading}>
+              Masuk
             </button>
-          </form>
+            <button type="button" className={`lp-tab ${!isLogin ? 'active' : ''}`}
+              onClick={() => switchMode('register')} disabled={loading}>
+              Daftar
+            </button>
+          </div>
+
+          <h2 className="lp-title">{isLogin ? 'Masuk ke Sistem' : 'Buat Akun Baru'}</h2>
+          <p className="lp-sub">
+            {isLogin
+              ? 'Belum punya akun? Klik tab "Daftar" di atas untuk membuat akun baru.'
+              : 'Isi data di bawah untuk membuat akun baru.'}
+          </p>
+
+          {isLogin ? (
+            <form key="login" className="lp-form" onSubmit={handleLogin} autoComplete="off">
+              <div className="lp-field">
+                <label className="lp-lbl">Email</label>
+                <div className="lp-inp-wrap">
+                  <input
+                    type="email" className="lp-inp"
+                    placeholder="email@gmail.com"
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    disabled={loading} required
+                  />
+                  <i className="pi pi-envelope lp-ico-l" />
+                </div>
+              </div>
+
+              <div className="lp-field">
+                <label className="lp-lbl">Password</label>
+                <div className="lp-inp-wrap">
+                  <input
+                    type={showPass ? 'text' : 'password'} className="lp-inp"
+                    placeholder="Masukkan password Anda"
+                    value={password} onChange={e => setPassword(e.target.value)}
+                    disabled={loading} required
+                  />
+                  <i className="pi pi-lock lp-ico-l" />
+                  <button type="button" className="lp-eye-btn"
+                    onClick={() => setShowPass(v => !v)} tabIndex={-1} disabled={loading}>
+                    <i className={`pi ${showPass ? 'pi-eye-slash' : 'pi-eye'}`} style={{ fontSize:13 }} />
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="lp-btn" disabled={loading || !email || !password}>
+                {loading
+                  ? <><div className="lp-spinner" /> Memverifikasi...</>
+                  : <><i className="pi pi-sign-in" style={{ fontSize:14 }} /> Masuk ke Sistem</>
+                }
+              </button>
+            </form>
+          ) : (
+            <form key="register" className="lp-form" onSubmit={handleRegister} autoComplete="off">
+              <div className="lp-field">
+                <label className="lp-lbl">Nama Lengkap</label>
+                <div className="lp-inp-wrap">
+                  <input
+                    type="text" className="lp-inp"
+                    placeholder="Nama lengkap Anda"
+                    value={fullName} onChange={e => setFullName(e.target.value)}
+                    disabled={loading} required
+                  />
+                  <i className="pi pi-user lp-ico-l" />
+                </div>
+              </div>
+
+              <div className="lp-field">
+                <label className="lp-lbl">Email</label>
+                <div className="lp-inp-wrap">
+                  <input
+                    type="email" className="lp-inp"
+                    placeholder="email@gmail.com"
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    disabled={loading} required
+                  />
+                  <i className="pi pi-envelope lp-ico-l" />
+                </div>
+              </div>
+
+              <div className="lp-field">
+                <label className="lp-lbl">Password</label>
+                <div className="lp-inp-wrap">
+                  <input
+                    type={showPass ? 'text' : 'password'} className="lp-inp"
+                    placeholder="Minimal 6 karakter"
+                    value={password} onChange={e => setPassword(e.target.value)}
+                    disabled={loading} required
+                  />
+                  <i className="pi pi-lock lp-ico-l" />
+                  <button type="button" className="lp-eye-btn"
+                    onClick={() => setShowPass(v => !v)} tabIndex={-1} disabled={loading}>
+                    <i className={`pi ${showPass ? 'pi-eye-slash' : 'pi-eye'}`} style={{ fontSize:13 }} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="lp-field">
+                <label className="lp-lbl">Konfirmasi Password</label>
+                <div className="lp-inp-wrap">
+                  <input
+                    type={showPass2 ? 'text' : 'password'} className="lp-inp"
+                    placeholder="Ulangi password Anda"
+                    value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    disabled={loading} required
+                  />
+                  <i className="pi pi-lock lp-ico-l" />
+                  <button type="button" className="lp-eye-btn"
+                    onClick={() => setShowPass2(v => !v)} tabIndex={-1} disabled={loading}>
+                    <i className={`pi ${showPass2 ? 'pi-eye-slash' : 'pi-eye'}`} style={{ fontSize:13 }} />
+                  </button>
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <div className="lp-hint-err">Password tidak cocok</div>
+                )}
+              </div>
+
+              <button type="submit" className="lp-btn"
+                disabled={loading || !fullName || !email || !password || !confirmPassword}>
+                {loading
+                  ? <><div className="lp-spinner" /> Memproses...</>
+                  : <><i className="pi pi-user-plus" style={{ fontSize:14 }} /> Daftar Sekarang</>
+                }
+              </button>
+            </form>
+          )}
 
           <div className="lp-divider">
             <div className="lp-divider-line" />
@@ -259,19 +427,32 @@ export default function LoginPage() {
             <div className="lp-divider-line" />
           </div>
 
-          <button type="button" className="lp-btn-google" onClick={handleGoogleLogin} disabled={loading}>
+          <button type="button" className="lp-btn-google" onClick={handleGoogleAuth} disabled={loading}>
             <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
               <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
               <path fill="#4CAF50" d="M24 44c5.4 0 10.3-1.9 14-5.3l-6.5-5.4C29.4 35 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/>
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.4C41.4 35.6 44 30.2 44 24c0-1.3-.1-2.7-.4-3.5z"/>
             </svg>
-            Login dengan Google
+            {isLogin ? 'Login dengan Google' : 'Daftar dengan Google'}
           </button>
 
           <div className="lp-footer">
-            <span className="lp-footer-txt">Butuh bantuan? </span>
-            <a href="mailto:support@erpjadwal.com" className="lp-footer-link">Hubungi IT Support</a>
+            {isLogin ? (
+              <>
+                <span className="lp-footer-txt">Belum punya akun? </span>
+                <button type="button" className="lp-footer-link" onClick={() => switchMode('register')}>
+                  Daftar sekarang
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="lp-footer-txt">Sudah punya akun? </span>
+                <button type="button" className="lp-footer-link" onClick={() => switchMode('login')}>
+                  Masuk di sini
+                </button>
+              </>
+            )}
           </div>
         </div>
 
