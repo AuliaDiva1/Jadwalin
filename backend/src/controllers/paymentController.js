@@ -144,3 +144,28 @@ export const getPaymentStatusController = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getPaymentHistoryController = async (req, res) => {
+  try {
+    const user_id = req.user.id;
+
+    const orders = await db('orders')
+      .leftJoin('subscription_plans', 'orders.plan_id', 'subscription_plans.id')
+      .where('orders.user_id', user_id)
+      .select(
+        'orders.order_id',
+        'orders.gross_amount as amount',
+        'orders.status',
+        'orders.bank',
+        'orders.va_number',
+        'orders.created_at',
+        'orders.updated_at',
+        'subscription_plans.name as plan_name'
+      )
+      .orderBy('orders.created_at', 'desc');
+
+    res.json({ success: true, data: orders });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
