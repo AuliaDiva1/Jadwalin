@@ -845,7 +845,7 @@ export default function LandingERP() {
             </div>
             <div style={{width:1,height:26,background:'#e2e8f0'}}/>
             <div style={{display:'flex',alignItems:'center',gap:6}}>
-              <span style={{fontSize:'1.05rem',fontWeight:800,color:'#4f46e5'}}>Rp 1.500.000</span>
+              <span style={{fontSize:'1.05rem',fontWeight:800,color:'#4f46e5'}}>-</span>
               <span style={{fontSize:'0.78rem',color:'#64748b'}}>per sesi</span>
             </div>
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center'}}>
