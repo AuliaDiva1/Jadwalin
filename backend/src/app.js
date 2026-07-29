@@ -25,6 +25,8 @@ import operationMaterialRoutes from './routes/operationMaterialRoutes.js';
 import workCalendarRoutes from './routes/workCalendarRoutes.js';
 import workDayOvertimeRoutes from './routes/workDayOvertimeRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import planRoutes from './routes/planRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 
 const app = express();
 
@@ -77,5 +79,7 @@ app.use('/api/operation-materials', operationMaterialRoutes);
 app.use('/api/work-calendar', workCalendarRoutes);
 app.use('/api/work-day-overtime', workDayOvertimeRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 export default app;
