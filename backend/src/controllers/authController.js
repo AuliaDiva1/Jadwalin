@@ -29,7 +29,7 @@ export const register = async (req, res) => {
       return error(res, 'Semua field wajib diisi', 400);
     }
 
-    // Jika sudah ada ADMIN, hanya ADMIN yang boleh register
+    // Jika sudah ada ADMIN, hanya ADMIN yang boleh register lewat form ini
     const adminCount = await countByRole('ADMIN');
     if (adminCount > 0) {
       if (!req.user || req.user.role !== 'ADMIN') {
@@ -253,28 +253,29 @@ export const googleLoginCallback = async (req, res) => {
     // profile: { id, email, name, picture, verified_email, ... }
 
     let user = await findUserByGoogleId(profile.id);
+    let isNewUser = false;
 
     if (!user) {
       user = await findUserByEmail(profile.email);
 
       if (user) {
-        // User sudah ada (register manual), tinggal link google_id-nya
+        // User sudah ada (register manual atau existing), tinggal link google_id-nya
         await linkGoogleId(user.id, profile.id);
       } else {
-        // User belum ada sama sekali — hanya izinkan kalau sudah ada ADMIN
-        const adminCount = await countByRole('ADMIN');
-        if (adminCount === 0) {
-          return res.redirect(`${process.env.FRONTEND_URL}/login?error=no_admin_registered`);
-        }
+        // User belum ada sama sekali — self-register otomatis sebagai PELANGGAN.
+        // Ini yang dipakai untuk pendaftaran publik dari landing page/pricing.
+        const baseUsername = profile.email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '');
+        const uniqueSuffix  = crypto.randomBytes(3).toString('hex');
 
         user = await createUser({
-          username: profile.email.split('@')[0],
-          full_name: profile.name,
+          username: `${baseUsername}_${uniqueSuffix}`,
+          full_name: profile.name || baseUsername,
           email: profile.email,
           password: null,
-          role: 'STAFF_GUDANG', // default role, silakan sesuaikan
+          role: 'PELANGGAN',
           google_id: profile.id,
         });
+        isNewUser = true;
       }
     }
 
@@ -290,7 +291,7 @@ export const googleLoginCallback = async (req, res) => {
 
     await addLoginHistory({
       userId: user.id,
-      action: 'LOGIN',
+      action: isNewUser ? 'REGISTER' : 'LOGIN',
       status: 'SUCCESS',
       ip: req.ip,
       userAgent: req.headers['user-agent'],

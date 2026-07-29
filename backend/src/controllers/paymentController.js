@@ -6,16 +6,13 @@ const snap = new midtransClient.Snap({
   serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
-/**
- * 1. Buat transaksi checkout berdasarkan plan_id
- * Endpoint: POST /api/payments/checkout
- */
 export const createPaymentController = async (req, res) => {
   try {
-    const { plan_id, user_id } = req.body;
+    const user_id = req.user.id; // ⬅️ dari token, bukan body
+    const { plan_id } = req.body;
 
-    if (!plan_id || !user_id) {
-      return res.status(400).json({ success: false, message: 'plan_id dan user_id wajib diisi' });
+    if (!plan_id) {
+      return res.status(400).json({ success: false, message: 'plan_id wajib diisi' });
     }
 
     const plan = await db('subscription_plans').where({ id: plan_id, is_active: true }).first();
@@ -44,6 +41,10 @@ export const createPaymentController = async (req, res) => {
         quantity: 1,
         name: `Langganan ${plan.name}`,
       }],
+      customer_details: {
+        first_name: req.user.name || 'Pengguna',
+        email: req.user.email,
+      },
       enabled_payments: ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va', 'other_va'],
     };
 
@@ -63,10 +64,6 @@ export const createPaymentController = async (req, res) => {
   }
 };
 
-/**
- * 2. Webhook notification dari Midtrans, sekaligus aktifkan subscription
- * Endpoint: POST /api/payments/notification
- */
 export const handlePaymentNotification = async (req, res) => {
   try {
     const statusResponse = await snap.transaction.notification(req.body);
@@ -129,10 +126,6 @@ export const handlePaymentNotification = async (req, res) => {
   }
 };
 
-/**
- * 3. Cek status transaksi berdasarkan order_id
- * Endpoint: GET /api/payments/:order_id
- */
 export const getPaymentStatusController = async (req, res) => {
   try {
     const { order_id } = req.params;
@@ -140,6 +133,10 @@ export const getPaymentStatusController = async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan' });
+    }
+
+    if (order.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
 
     res.json({ success: true, data: order });
