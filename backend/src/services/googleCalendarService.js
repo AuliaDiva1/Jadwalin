@@ -64,7 +64,6 @@ export function getLoginUrl(nonce) {
       'openid',
       'email',
       'profile',
-      'https://www.googleapis.com/auth/calendar.events',
     ],
     redirect_uri: process.env.GOOGLE_LOGIN_REDIRECT_URI,
     state: nonce,
