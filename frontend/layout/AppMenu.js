@@ -156,6 +156,25 @@ const AppMenu = () => {
       },
     ];
   }
+  // =========================
+  // 4. PELANGGAN
+  // =========================
+  else if (userRole === "PELANGGAN") {
+    model = [
+      {
+        label: "UTAMA",
+        items: [
+          { label: "Dashboard", icon: "pi pi-fw pi-home", to: "/pelanggan/dashboard" },
+        ],
+      },
+      {
+        label: "LANGGANAN",
+        items: [
+          { label: "Riwayat Pemesanan", icon: "pi pi-fw pi-history", to: "/pelanggan/riwayat" },
+        ],
+      },
+    ];
+  }
 
   return (
     <MenuProvider>
