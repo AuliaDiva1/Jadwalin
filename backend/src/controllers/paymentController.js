@@ -8,7 +8,7 @@ const snap = new midtransClient.Snap({
 
 export const createPaymentController = async (req, res) => {
   try {
-    const user_id = req.user.id; // ⬅️ dari token, bukan body
+    const user_id = req.user.userId;
     const { plan_id } = req.body;
 
     if (!plan_id) {
@@ -135,7 +135,7 @@ export const getPaymentStatusController = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan' });
     }
 
-    if (order.user_id !== req.user.id) {
+    if (order.user_id !== req.user.userId) {
       return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
 
@@ -147,7 +147,7 @@ export const getPaymentStatusController = async (req, res) => {
 
 export const getPaymentHistoryController = async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user.userId;
 
     const orders = await db('orders')
       .leftJoin('subscription_plans', 'orders.plan_id', 'subscription_plans.id')
