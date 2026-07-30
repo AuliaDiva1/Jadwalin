@@ -33,6 +33,11 @@ export default function InvoiceModal({ trx, onClose }) {
   const createdAt = trx.created_at ? new Date(trx.created_at) : null;
   const updatedAt = trx.updated_at ? new Date(trx.updated_at) : null;
 
+  // Info penerima (pelanggan) — ambil dari trx kalau ada, fallback '-'
+  const customerName = trx.customer_name || trx.user?.name || trx.name || '-';
+  const customerEmail = trx.customer_email || trx.user?.email || trx.email || '-';
+  const customerPhone = trx.customer_phone || trx.user?.phone || trx.phone || '-';
+
   const handlePrint = () => {
     window.print();
   };
@@ -40,13 +45,31 @@ export default function InvoiceModal({ trx, onClose }) {
   return (
     <div
       onClick={onClose}
+      className="invoice-overlay"
       style={{
         position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 1000,
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
     >
+      {/* CSS khusus print */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .invoice-printable, .invoice-printable * { visibility: visible; }
+          .invoice-printable {
+            position: absolute !important;
+            top: 0; left: 0; width: 100% !important;
+            max-height: none !important; overflow: visible !important;
+            box-shadow: none !important; border-radius: 0 !important;
+          }
+          .invoice-overlay { position: static !important; background: none !important; padding: 0 !important; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
       <div
         onClick={(e) => e.stopPropagation()}
+        className="invoice-printable"
         style={{
           background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480,
           maxHeight: '90vh', overflowY: 'auto', fontFamily: "'Poppins', sans-serif",
@@ -64,15 +87,19 @@ export default function InvoiceModal({ trx, onClose }) {
           }} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
+              <div style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 6 }}>
+                Jadwalin
+              </div>
               <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
                 Invoice
               </div>
-              <div style={{ color: '#fff', fontSize: '1.15rem', fontWeight: 800 }}>
+              <div style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 800 }}>
                 #{orderId}
               </div>
             </div>
             <button
               onClick={onClose}
+              className="no-print"
               style={{
                 background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8,
                 width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -94,6 +121,27 @@ export default function InvoiceModal({ trx, onClose }) {
 
         {/* Body detail */}
         <div style={{ padding: '24px 28px' }}>
+
+          {/* Dari & Kepada */}
+          <div style={{ display: 'flex', gap: 16, marginBottom: 22, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
+                Dari
+              </div>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>Jadwalin</div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Sistem Penjadwalan Produksi</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
+                Kepada
+              </div>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>{customerName}</div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{customerEmail}</div>
+              {customerPhone !== '-' && (
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{customerPhone}</div>
+              )}
+            </div>
+          </div>
 
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
@@ -142,7 +190,11 @@ export default function InvoiceModal({ trx, onClose }) {
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ textAlign: 'center', marginBottom: 4, fontSize: '0.7rem', color: '#cbd5e1' }} className="print-footer">
+            Invoice ini dibuat otomatis oleh sistem Jadwalin.
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 18 }} className="no-print">
             <button
               onClick={onClose}
               style={{
