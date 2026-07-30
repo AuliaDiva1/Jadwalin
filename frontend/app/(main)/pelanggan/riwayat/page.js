@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import InvoiceModal from './components/detail/page';
+import InvoiceModal from './components/detail/InvoiceModal';
 
 const STATUS_STYLES = {
   paid:       { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
