@@ -27,7 +27,9 @@ import workDayOvertimeRoutes from './routes/workDayOvertimeRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import planRoutes from './routes/planRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
-import superadminRoutes from './routes/superadminRoutes.js'; // [BARU]
+import superadminRoutes from './routes/superadminRoutes.js'; 
+import companyProfileRoutes from './routes/companyProfileRoutes.js';
+
 
 const app = express();
 
@@ -82,6 +84,7 @@ app.use('/api/work-day-overtime', workDayOvertimeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/superadmin', superadminRoutes); // [BARU]
+app.use('/api/superadmin', superadminRoutes); 
+app.use('/api/company-profile', companyProfileRoutes);
 
 export default app;
