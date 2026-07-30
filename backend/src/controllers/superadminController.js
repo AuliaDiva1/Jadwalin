@@ -19,7 +19,14 @@ import {
   deactivatePlan,
   getPlanById,
 } from '../models/subscriptionPlanModel.js';
-import { getAllOrders, getTotalRevenue } from '../models/orderModel.js';
+import {
+  getAllOrders,
+  getTotalRevenue,
+  getRevenuePerPlan,
+  getMonthlyRevenueTrend,
+  getExpiringCustomers,
+  getTopCustomers,
+} from '../models/orderModel.js';
 import { hashPassword } from '../utils/hash.js';
 import { success, error } from '../utils/response.js';
 
@@ -47,6 +54,50 @@ export const getDashboardStats = async (req, res) => {
     });
   } catch (err) {
     console.error('getDashboardStats error:', err);
+    return error(res, 'Terjadi kesalahan server');
+  }
+};
+
+// ===================== DASHBOARD DETAIL (BARU) =====================
+export const getDashboardRevenuePerPlan = async (req, res) => {
+  try {
+    const data = await getRevenuePerPlan();
+    return success(res, 'Berhasil mengambil revenue per paket', data);
+  } catch (err) {
+    console.error('getDashboardRevenuePerPlan error:', err);
+    return error(res, 'Terjadi kesalahan server');
+  }
+};
+
+export const getDashboardRevenueTrend = async (req, res) => {
+  try {
+    const { months = 6 } = req.query;
+    const data = await getMonthlyRevenueTrend(months);
+    return success(res, 'Berhasil mengambil tren revenue bulanan', data);
+  } catch (err) {
+    console.error('getDashboardRevenueTrend error:', err);
+    return error(res, 'Terjadi kesalahan server');
+  }
+};
+
+export const getDashboardExpiringCustomers = async (req, res) => {
+  try {
+    const { days = 7 } = req.query;
+    const data = await getExpiringCustomers(days);
+    return success(res, 'Berhasil mengambil pelanggan yang akan expired', data);
+  } catch (err) {
+    console.error('getDashboardExpiringCustomers error:', err);
+    return error(res, 'Terjadi kesalahan server');
+  }
+};
+
+export const getDashboardTopCustomers = async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    const data = await getTopCustomers(limit);
+    return success(res, 'Berhasil mengambil top customer', data);
+  } catch (err) {
+    console.error('getDashboardTopCustomers error:', err);
     return error(res, 'Terjadi kesalahan server');
   }
 };

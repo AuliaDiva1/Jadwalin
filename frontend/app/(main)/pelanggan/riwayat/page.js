@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import InvoiceModal from '../../components/detail/page'; // [BARU] sesuaikan path relatif ke file kamu
 
 const STATUS_STYLES = {
   paid:       { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
@@ -23,6 +24,7 @@ export default function RiwayatPemesananPage() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [selectedInvoice, setSelectedInvoice] = useState(null); // [BARU]
 
   const fetchHistory = async () => {
     const token = localStorage.getItem('TOKEN');
@@ -161,6 +163,7 @@ export default function RiwayatPemesananPage() {
                     <th style={{ textAlign: 'left', padding: '14px 20px', color: '#94a3b8', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Jumlah</th>
                     <th style={{ textAlign: 'left', padding: '14px 20px', color: '#94a3b8', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</th>
                     <th style={{ textAlign: 'left', padding: '14px 20px', color: '#94a3b8', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>No. Transaksi</th>
+                    <th style={{ textAlign: 'left', padding: '14px 20px', color: '#94a3b8', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -190,6 +193,18 @@ export default function RiwayatPemesananPage() {
                         <td data-label="No. Transaksi" style={{ padding: '16px 20px', color: '#94a3b8', fontSize: '0.78rem' }}>
                           {trx.order_id || trx.transaction_id || '-'}
                         </td>
+                        <td data-label="Aksi" style={{ padding: '16px 20px' }}>
+                          <button
+                            onClick={() => setSelectedInvoice(trx)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8,
+                              border: '1.5px solid #e2e8f0', background: '#fff', color: '#4f46e5', fontWeight: 600,
+                              fontSize: '0.75rem', cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+                            }}
+                          >
+                            <i className="pi pi-eye" style={{ fontSize: '0.7rem' }} /> Detail
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -199,6 +214,8 @@ export default function RiwayatPemesananPage() {
           )}
         </div>
       </div>
+
+      <InvoiceModal trx={selectedInvoice} onClose={() => setSelectedInvoice(null)} />
     </div>
   );
 }

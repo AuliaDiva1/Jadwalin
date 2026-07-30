@@ -189,8 +189,7 @@ const AppMenu = () => {
         ],
       },
     ];
-  }
-  // =========================
+  }// =========================
   // 4. PELANGGAN
   // =========================
   else if (userRole === "PELANGGAN") {
@@ -207,9 +206,14 @@ const AppMenu = () => {
           { label: "Riwayat Pemesanan", icon: "pi pi-fw pi-history", to: "/pelanggan/riwayat" },
         ],
       },
+      {
+        label: "PERUSAHAAN",
+        items: [
+          { label: "Profil Perusahaan", icon: "pi pi-fw pi-building", to: "/pelanggan/profil-perusahaan" },
+        ],
+      },
     ];
   }
-
   return (
     <MenuProvider>
       <ul className="layout-menu">
