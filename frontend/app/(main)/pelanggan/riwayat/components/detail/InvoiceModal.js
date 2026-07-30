@@ -1,29 +1,29 @@
 'use client';
 
 const STATUS_STYLES = {
-  paid:       { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
-  settlement: { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
-  success:    { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
-  pending:    { bg: '#fef9c3', color: '#b45309', label: 'Menunggu' },
-  failed:     { bg: '#fee2e2', color: '#dc2626', label: 'Gagal' },
-  expired:    { bg: '#f1f5f9', color: '#64748b', label: 'Kedaluwarsa' },
-  cancel:     { bg: '#f1f5f9', color: '#64748b', label: 'Dibatalkan' },
+  paid:       { color: '#16a34a', bg: '#dcfce7', label: 'PAID' },
+  settlement: { color: '#16a34a', bg: '#dcfce7', label: 'PAID' },
+  success:    { color: '#16a34a', bg: '#dcfce7', label: 'PAID' },
+  pending:    { color: '#b45309', bg: '#fef9c3', label: 'PENDING' },
+  failed:     { color: '#dc2626', bg: '#fee2e2', label: 'FAILED' },
+  expired:    { color: '#64748b', bg: '#f1f5f9', label: 'EXPIRED' },
+  cancel:     { color: '#64748b', bg: '#f1f5f9', label: 'CANCELLED' },
 };
 
 function getStatusStyle(status) {
-  return STATUS_STYLES[status?.toLowerCase()] || { bg: '#f1f5f9', color: '#64748b', label: status || '-' };
+  return STATUS_STYLES[status?.toLowerCase()] || { color: '#64748b', bg: '#f1f5f9', label: (status || '-').toUpperCase() };
 }
 
-function DetailRow({ label, value }) {
+function InfoLine({ label, value, bold }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-      <span style={{ color: '#94a3b8' }}>{label}</span>
-      <span style={{ color: '#0f172a', fontWeight: 600, textAlign: 'right' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: 5 }}>
+      <span style={{ color: '#64748b' }}>{label}</span>
+      <span style={{ color: '#0f172a', fontWeight: bold ? 700 : 600 }}>{value}</span>
     </div>
   );
 }
 
-export default function InvoiceModal({ trx, onClose }) {
+export default function InvoiceModal({ trx, billedTo, onClose }) {
   if (!trx) return null;
 
   const style = getStatusStyle(trx.status);
@@ -31,16 +31,16 @@ export default function InvoiceModal({ trx, onClose }) {
   const planName = trx.plan?.name || trx.plan_name || '-';
   const amount = trx.amount ? Number(trx.amount) : 0;
   const createdAt = trx.created_at ? new Date(trx.created_at) : null;
-  const updatedAt = trx.updated_at ? new Date(trx.updated_at) : null;
 
-  // Info penerima (pelanggan) — ambil dari trx kalau ada, fallback '-'
-  const customerName = trx.customer_name || trx.user?.name || trx.name || '-';
-  const customerEmail = trx.customer_email || trx.user?.email || trx.email || '-';
-  const customerPhone = trx.customer_phone || trx.user?.phone || trx.phone || '-';
+  // Perkiraan tanggal billing berikutnya: +1 bulan dari tanggal transaksi (langganan bulanan)
+  const nextBillingDate = createdAt ? new Date(createdAt) : null;
+  if (nextBillingDate) nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const invoiceNumber = `INV-${orderId}`;
+  const fmtDate = (d) => d ? d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+  const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString('id-ID')}`;
+
+  const handlePrint = () => window.print();
 
   return (
     <div
@@ -51,7 +51,6 @@ export default function InvoiceModal({ trx, onClose }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
     >
-      {/* CSS khusus print */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -71,152 +70,161 @@ export default function InvoiceModal({ trx, onClose }) {
         onClick={(e) => e.stopPropagation()}
         className="invoice-printable"
         style={{
-          background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480,
-          maxHeight: '90vh', overflowY: 'auto', fontFamily: "'Poppins', sans-serif",
-          boxShadow: '0 30px 70px rgba(0,0,0,0.25)',
+          background: '#fff', borderRadius: 16, width: '100%', maxWidth: 620,
+          maxHeight: '92vh', overflowY: 'auto', fontFamily: "'Poppins', sans-serif",
+          boxShadow: '0 30px 70px rgba(0,0,0,0.25)', padding: '32px 36px',
         }}
       >
-        {/* Header invoice */}
+        {/* Close button */}
+        <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: -8 }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: '#f1f5f9', border: 'none', borderRadius: 8,
+              width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#64748b',
+            }}
+          >
+            <i className="pi pi-times" style={{ fontSize: '0.75rem' }} />
+          </button>
+        </div>
+
+        {/* Header: perusahaan + status */}
         <div style={{
-          background: 'linear-gradient(135deg,#1e1b4b,#4f46e5 55%,#7c3aed)',
-          borderRadius: '20px 20px 0 0', padding: '26px 28px', position: 'relative', overflow: 'hidden',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+          marginBottom: 28, paddingBottom: 24, borderBottom: '1.5px solid #f1f5f9', flexWrap: 'wrap', gap: 16,
         }}>
-          <div style={{
-            position: 'absolute', top: -50, right: -30, width: 180, height: 180,
-            borderRadius: '50%', background: 'rgba(255,255,255,0.06)',
-          }} />
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 6 }}>
-                Jadwalin
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-                Invoice
-              </div>
-              <div style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 800 }}>
-                #{orderId}
-              </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#0f172a', marginBottom: 4 }}>Jadwalin</div>
+            <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, maxWidth: 260 }}>
+              Sistem Penjadwalan Produksi Berbasis Web<br />
+              PSDKU Universitas Sebelas Maret, Madiun<br />
+              Jawa Timur, Indonesia
             </div>
-            <button
-              onClick={onClose}
-              className="no-print"
-              style={{
-                background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8,
-                width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#fff',
-              }}
-            >
-              <i className="pi pi-times" style={{ fontSize: '0.8rem' }} />
-            </button>
           </div>
-          <div style={{ marginTop: 14 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+              Invoice
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0f172a', marginBottom: 10 }}>
+              {invoiceNumber}
+            </div>
             <span style={{
-              display: 'inline-block', padding: '4px 12px', borderRadius: 99,
-              background: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 700, fontSize: '0.72rem',
+              display: 'inline-block', padding: '5px 14px', borderRadius: 6,
+              background: style.bg, color: style.color, fontWeight: 800, fontSize: '0.72rem', letterSpacing: '0.04em',
             }}>
               {style.label}
             </span>
           </div>
         </div>
 
-        {/* Body detail */}
-        <div style={{ padding: '24px 28px' }}>
-
-          {/* Dari & Kepada */}
-          <div style={{ display: 'flex', gap: 16, marginBottom: 22, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
-                Dari
-              </div>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>Jadwalin</div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Sistem Penjadwalan Produksi</div>
+        {/* Invoice meta + Billed to */}
+        <div style={{ display: 'flex', gap: 24, marginBottom: 26, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
+              Billed To
             </div>
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
-                Kepada
-              </div>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>{customerName}</div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{customerEmail}</div>
-              {customerPhone !== '-' && (
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{customerPhone}</div>
-              )}
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.9rem', marginBottom: 3 }}>
+              {billedTo?.name || 'Memuat...'}
             </div>
+            {billedTo?.address && billedTo.address !== '-' && (
+              <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{billedTo.address}</div>
+            )}
+            {billedTo?.city && billedTo.city !== '-' && (
+              <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{billedTo.city}, Indonesia</div>
+            )}
+            {billedTo?.email && billedTo.email !== '-' && (
+              <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4 }}>{billedTo.email}</div>
+            )}
+            {billedTo?.phone && billedTo.phone !== '-' && (
+              <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{billedTo.phone}</div>
+            )}
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
-              Detail Paket
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
+              Detail Invoice
             </div>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '14px 16px', background: '#f8faff', borderRadius: 12,
-            }}>
-              <div>
-                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.92rem' }}>{planName}</div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Langganan bulanan</div>
-              </div>
-              <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1rem' }}>
-                Rp {amount.toLocaleString('id-ID')}
-              </div>
-            </div>
+            <InfoLine label="Invoice Issued" value={fmtDate(createdAt)} />
+            <InfoLine label="Next Billing Date" value={style.label === 'PAID' ? fmtDate(nextBillingDate) : '-'} />
+            <InfoLine label="Order Nr." value={orderId} />
+            <InfoLine label="Metode Pembayaran" value={trx.bank ? `${trx.bank.toUpperCase()} VA` : '-'} />
+            <InfoLine label="Nomor VA" value={trx.va_number || '-'} />
           </div>
+        </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
-              Informasi Pembayaran
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <DetailRow label="Nomor Order" value={orderId} />
-              <DetailRow label="Metode Pembayaran" value={trx.bank ? trx.bank.toUpperCase() + ' Virtual Account' : '-'} />
-              <DetailRow label="Nomor VA" value={trx.va_number || '-'} />
-              <DetailRow
-                label="Tanggal Transaksi"
-                value={createdAt ? createdAt.toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
-              />
-              <DetailRow
-                label="Terakhir Diperbarui"
-                value={updatedAt ? updatedAt.toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
-              />
-            </div>
-          </div>
+        {/* Tabel deskripsi */}
+        <div style={{ marginBottom: 22 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+            <thead>
+              <tr style={{ background: '#f8faff' }}>
+                <th style={{ textAlign: 'left', padding: '10px 12px', color: '#94a3b8', fontWeight: 700, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderRadius: '8px 0 0 8px' }}>
+                  Deskripsi
+                </th>
+                <th style={{ textAlign: 'right', padding: '10px 12px', color: '#94a3b8', fontWeight: 700, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderRadius: '0 8px 8px 0' }}>
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '14px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ fontWeight: 700, color: '#0f172a' }}>Paket {planName}</div>
+                  <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                    Langganan bulanan{createdAt && nextBillingDate ? ` · ${fmtDate(createdAt)} s/d ${fmtDate(nextBillingDate)}` : ''}
+                  </div>
+                </td>
+                <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
+                  {fmtRp(amount)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
+        {/* Total breakdown */}
+        <div style={{ marginLeft: 'auto', maxWidth: 280, marginBottom: 26 }}>
+          <InfoLine label="Subtotal" value={fmtRp(amount)} />
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 0', borderTop: '1.5px dashed #e2e8f0', marginBottom: 22,
+            padding: '12px 0', marginTop: 8, borderTop: '1.5px dashed #e2e8f0',
           }}>
-            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>Total Dibayar</span>
-            <span style={{ fontWeight: 800, color: '#4f46e5', fontSize: '1.2rem' }}>
-              Rp {amount.toLocaleString('id-ID')}
-            </span>
+            <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>Total</span>
+            <span style={{ fontWeight: 800, color: '#4f46e5', fontSize: '1.15rem' }}>{fmtRp(amount)}</span>
           </div>
+          <InfoLine
+            label="Amount Due"
+            value={style.label === 'PAID' ? fmtRp(0) : fmtRp(amount)}
+            bold
+          />
+        </div>
 
-          <div style={{ textAlign: 'center', marginBottom: 4, fontSize: '0.7rem', color: '#cbd5e1' }} className="print-footer">
-            Invoice ini dibuat otomatis oleh sistem Jadwalin.
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: 24, fontSize: '0.7rem', color: '#cbd5e1' }}>
+          Invoice ini dibuat otomatis oleh sistem Jadwalin.
+        </div>
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 18 }} className="no-print">
-            <button
-              onClick={onClose}
-              style={{
-                flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #e2e8f0',
-                background: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.85rem',
-                cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
-              }}
-            >
-              Tutup
-            </button>
-            <button
-              onClick={handlePrint}
-              style={{
-                flex: 1, padding: '11px', borderRadius: 10, border: 'none',
-                background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', fontWeight: 700,
-                fontSize: '0.85rem', cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}
-            >
-              <i className="pi pi-print" style={{ fontSize: '0.75rem' }} /> Cetak Invoice
-            </button>
-          </div>
+        <div style={{ display: 'flex', gap: 10 }} className="no-print">
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #e2e8f0',
+              background: '#fff', color: '#374151', fontWeight: 600, fontSize: '0.85rem',
+              cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+            }}
+          >
+            Tutup
+          </button>
+          <button
+            onClick={handlePrint}
+            style={{
+              flex: 1, padding: '11px', borderRadius: 10, border: 'none',
+              background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', fontWeight: 700,
+              fontSize: '0.85rem', cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            <i className="pi pi-print" style={{ fontSize: '0.75rem' }} /> Cetak Invoice
+          </button>
         </div>
       </div>
     </div>

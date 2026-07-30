@@ -24,7 +24,8 @@ export default function RiwayatPemesananPage() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [selectedInvoice, setSelectedInvoice] = useState(null); // [BARU]
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [billedTo, setBilledTo] = useState(null);
 
   const fetchHistory = async () => {
     const token = localStorage.getItem('TOKEN');
@@ -44,8 +45,38 @@ export default function RiwayatPemesananPage() {
     }
   };
 
+  // Ambil data profil pelanggan sekali, dipakai buat "Kepada" di semua invoice
+  const fetchBilledTo = async () => {
+    const token = localStorage.getItem('TOKEN');
+    if (!token) return;
+    try {
+      const [meRes, profileRes] = await Promise.allSettled([
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/company-profile/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const me = meRes.status === 'fulfilled' ? meRes.value.data?.data : null;
+      const profile = profileRes.status === 'fulfilled' ? profileRes.value.data?.data : null;
+
+      setBilledTo({
+        name: profile?.company_name || me?.full_name || '-',
+        email: me?.email || '-',
+        phone: profile?.phone_number || me?.phone_number || '-',
+        address: profile?.address || '-',
+        city: profile?.city || '-',
+      });
+    } catch (err) {
+      console.error('Gagal memuat data profil untuk invoice:', err);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
+    fetchBilledTo();
   }, []);
 
   const filteredHistory = filter === 'all'
@@ -215,7 +246,7 @@ export default function RiwayatPemesananPage() {
         </div>
       </div>
 
-      <InvoiceModal trx={selectedInvoice} onClose={() => setSelectedInvoice(null)} />
+      <InvoiceModal trx={selectedInvoice} billedTo={billedTo} onClose={() => setSelectedInvoice(null)} />
     </div>
   );
 }
