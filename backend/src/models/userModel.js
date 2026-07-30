@@ -1,4 +1,5 @@
-import { db } from '../core/config/knex.js';
+// src/models/userModel.js
+import db from '../config/db.js'; // pastikan path ini sesuai project kamu
 
 // =========================
 // CRUD DASAR
@@ -52,6 +53,11 @@ export const toggleUserStatus = async (id, is_active) => {
 // =========================
 // SUPERADMIN — TAMBAHAN
 // =========================
+
+export const countByRole = async (role) => {
+  const result = await db('users').where({ role }).count('id as total');
+  return Number(result[0].total);
+};
 
 export const getAllUsersDetailed = async ({ role, search, status, limit, offset }) => {
   let query = db('users')
