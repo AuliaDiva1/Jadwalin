@@ -6,7 +6,7 @@ import {
 
 export const getMyCompanyProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const profile = await getCompanyProfileByUserId(userId);
 
     if (!profile) {
@@ -31,7 +31,7 @@ export const getMyCompanyProfile = async (req, res) => {
 
 export const saveCompanyProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const {
       company_name,
       industry,
