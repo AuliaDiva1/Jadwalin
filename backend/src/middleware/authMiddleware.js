@@ -72,6 +72,14 @@ export const authorizeStaffGudang = (req, res, next) => {
   next();
 };
 
+// [BARU] khusus superadmin, ngurus dashboard bisnis SaaS
+export const authorizeSuperadmin = (req, res, next) => {
+  if (req.user?.role !== 'superadmin') {
+    return res.status(403).json({ status: 'error', message: 'Akses ditolak, hanya superadmin yang diizinkan' });
+  }
+  next();
+};
+
 export const authorizeAdminOrManajer = (req, res, next) => {
   const allowed = ['admin', 'manajer_produksi'];
   if (!allowed.includes(req.user?.role)) {
@@ -82,6 +90,15 @@ export const authorizeAdminOrManajer = (req, res, next) => {
 
 export const authorizeAdminOrStaff = (req, res, next) => {
   const allowed = ['admin', 'staff_gudang'];
+  if (!allowed.includes(req.user?.role)) {
+    return res.status(403).json({ status: 'error', message: 'Akses ditolak' });
+  }
+  next();
+};
+
+// [BARU] opsional, buat endpoint yang boleh diakses superadmin ATAU admin
+export const authorizeSuperadminOrAdmin = (req, res, next) => {
+  const allowed = ['superadmin', 'admin'];
   if (!allowed.includes(req.user?.role)) {
     return res.status(403).json({ status: 'error', message: 'Akses ditolak' });
   }

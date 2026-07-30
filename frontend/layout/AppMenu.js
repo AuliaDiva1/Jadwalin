@@ -20,9 +20,43 @@ const AppMenu = () => {
   let model = [];
 
   // =========================
+  // 0. SUPERADMIN [BARU]
+  // =========================
+  if (userRole === "SUPERADMIN") {
+    model = [
+      {
+        label: "UTAMA",
+        items: [
+          { label: "Dashboard", icon: "pi pi-fw pi-home", to: "/superadmin/dashboard" },
+        ],
+      },
+      {
+        label: "PELANGGAN & LANGGANAN",
+        items: [
+          { label: "Pendaftar & Pelanggan", icon: "pi pi-fw pi-users",   to: "/superadmin/pelanggan" },
+          { label: "Profil Perusahaan",     icon: "pi pi-fw pi-building", to: "/superadmin/perusahaan" },
+          { label: "Riwayat Transaksi",     icon: "pi pi-fw pi-wallet",  to: "/superadmin/transaksi" },
+        ],
+      },
+      {
+        label: "MANAJEMEN PAKET",
+        items: [
+          { label: "Paket Langganan", icon: "pi pi-fw pi-tags", to: "/superadmin/plans" },
+        ],
+      },
+      {
+        label: "MANAJEMEN AKUN",
+        items: [
+          { label: "Semua Pengguna", icon: "pi pi-fw pi-user-edit", to: "/superadmin/users" },
+        ],
+      },
+    ];
+  }
+
+  // =========================
   // 1. ADMIN
   // =========================
-  if (userRole === "ADMIN") {
+  else if (userRole === "ADMIN") {
     model = [
       {
         label: "UTAMA",
