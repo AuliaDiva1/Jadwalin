@@ -1,4 +1,58 @@
-// tambahan di src/models/userModel.js
+// src/models/userModel.js
+import db from '../config/db.js'; // sesuaikan path koneksi knex kamu
+
+// =========================
+// CRUD DASAR
+// =========================
+
+export const getAllUsers = async () => {
+  return db('users').select(
+    'id', 'username', 'full_name', 'email', 'role', 'is_active', 'created_at'
+  );
+};
+
+export const getUserById = async (id) => {
+  return db('users').where({ id }).first();
+};
+
+export const getUserByEmail = async (email) => {
+  return db('users').where({ email }).first();
+};
+
+export const getUserByUsername = async (username) => {
+  return db('users').where({ username }).first();
+};
+
+export const addUser = async ({ username, full_name, email, password, role }) => {
+  const [id] = await db('users').insert({
+    username,
+    full_name,
+    email,
+    password,
+    role,
+    is_active: true,
+    created_at: new Date(),
+  });
+  return getUserById(id);
+};
+
+export const updateUser = async (id, updateData) => {
+  await db('users').where({ id }).update(updateData);
+  return getUserById(id);
+};
+
+export const deleteUser = async (id) => {
+  return db('users').where({ id }).del();
+};
+
+export const toggleUserStatus = async (id, is_active) => {
+  await db('users').where({ id }).update({ is_active });
+  return getUserById(id);
+};
+
+// =========================
+// SUPERADMIN — TAMBAHAN
+// =========================
 
 export const getAllUsersDetailed = async ({ role, search, status, limit, offset }) => {
   let query = db('users')
