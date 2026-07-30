@@ -26,6 +26,7 @@ export default function PelangganDashboard() {
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [showPlans, setShowPlans] = useState(false); // toggle upgrade/perpanjang saat sudah aktif
 
   useEffect(() => {
     const token = localStorage.getItem('TOKEN');
@@ -131,6 +132,13 @@ export default function PelangganDashboard() {
 
   const isActive = subscription?.status === 'active';
 
+  // Sisa hari sampai expired (buat ditampilin di banner)
+  let daysLeft = null;
+  if (isActive && subscription?.expires_at) {
+    const diff = new Date(subscription.expires_at).getTime() - Date.now();
+    daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", minHeight: '100vh', background: '#f8faff' }}>
       <style>{`
@@ -140,6 +148,8 @@ export default function PelangganDashboard() {
         .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(79,70,229,0.14); }
         .history-row { transition: background 0.2s; }
         .history-row:hover { background: #f8faff; }
+        .cta-btn { transition: transform 0.2s ease; }
+        .cta-btn:hover { transform: translateY(-2px); }
         @media (max-width: 640px) {
           .history-table thead { display: none; }
           .history-table tr { display: block; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
@@ -166,48 +176,134 @@ export default function PelangganDashboard() {
           </div>
         </div>
 
-        {/* Status banner */}
-        <div style={{
-          borderRadius: 20, padding: 26, marginBottom: 36,
-          background: isActive
-            ? 'linear-gradient(135deg,#1e1b4b,#4f46e5 55%,#7c3aed)'
-            : '#ffffff',
-          border: isActive ? 'none' : '1.5px solid #e2e8f0',
-          boxShadow: isActive ? '0 20px 50px rgba(79,70,229,0.3)' : '0 2px 12px rgba(0,0,0,0.04)',
-          position: 'relative', overflow: 'hidden', animation: 'fadeUp 0.55s 0.05s both',
-        }}>
-          {isActive && (
+        {isActive ? (
+          <>
+            {/* ===== HERO: paket aktif ===== */}
             <div style={{
-              position: 'absolute', top: -60, right: -40, width: 220, height: 220,
-              borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none',
-            }} />
-          )}
-          {isActive ? (
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-              <div>
+              borderRadius: 20, padding: 32, marginBottom: 24,
+              background: 'linear-gradient(135deg,#1e1b4b,#4f46e5 55%,#7c3aed)',
+              boxShadow: '0 20px 50px rgba(79,70,229,0.3)',
+              position: 'relative', overflow: 'hidden', animation: 'fadeUp 0.55s 0.05s both',
+            }}>
+              <div style={{
+                position: 'absolute', top: -60, right: -40, width: 220, height: 220,
+                borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none',
+              }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)',
                   borderRadius: 99, padding: '4px 12px', fontSize: '0.68rem', fontWeight: 700,
-                  color: '#c7d2fe', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10,
+                  color: '#c7d2fe', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12,
                 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
-                  Paket Aktif
+                  Paket {subscription?.plan?.name} Aktif
                 </div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: 4 }}>
-                  {subscription?.plan?.name}
+                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.01em' }}>
+                  Langganan Anda aktif
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.85rem' }}>
+                <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', marginBottom: 22 }}>
                   Berlaku sampai{' '}
                   {subscription?.expires_at &&
                     new Date(subscription.expires_at).toLocaleDateString('id-ID', {
                       day: 'numeric', month: 'long', year: 'numeric',
                     })}
+                  {daysLeft !== null && ` · ${daysLeft} hari lagi`}
+                </div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <button
+                    className="cta-btn"
+                    onClick={() => router.push('/pelanggan/profil-perusahaan')}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '13px 22px', borderRadius: 12,
+                      border: 'none', background: '#fff', color: '#4f46e5', fontWeight: 700, fontSize: '0.88rem',
+                      cursor: 'pointer', fontFamily: "'Poppins', sans-serif", boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    <i className="pi pi-building" style={{ fontSize: '0.8rem' }} /> Kelola Profil Perusahaan
+                  </button>
+                  <button
+                    onClick={() => setShowPlans((v) => !v)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '13px 22px', borderRadius: 12,
+                      border: '1.5px solid rgba(255,255,255,0.35)', background: 'transparent', color: '#fff',
+                      fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
+                    }}
+                  >
+                    {showPlans ? 'Sembunyikan Paket' : 'Upgrade / Perpanjang Paket'}
+                  </button>
                 </div>
               </div>
-              <i className="pi pi-shield" style={{ fontSize: '2.6rem', color: 'rgba(255,255,255,0.2)' }} />
             </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+
+            {/* Plans - disembunyikan default, muncul kalau user memang mau upgrade/perpanjang */}
+            {showPlans && (
+              <div style={{ marginBottom: 40, animation: 'fadeUp 0.4s both' }}>
+                <div style={{ marginBottom: 16 }}>
+                  <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+                    Upgrade / Perpanjang Paket
+                  </h2>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Semua paket bisa dibayar langsung lewat Midtrans.</p>
+                </div>
+                <div style={{
+                  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16,
+                }}>
+                  {plans.map((plan) => {
+                    const isCurrent = subscription?.plan?.id === plan.id;
+                    return (
+                      <div
+                        key={plan.id}
+                        className="plan-card"
+                        style={{
+                          background: '#fff', borderRadius: 16, padding: 20, position: 'relative',
+                          border: isCurrent ? '2px solid #4f46e5' : '1.5px solid #e2e8f0',
+                          boxShadow: isCurrent ? '0 10px 26px rgba(79,70,229,0.12)' : '0 2px 8px rgba(0,0,0,0.03)',
+                        }}
+                      >
+                        {isCurrent && (
+                          <div style={{
+                            position: 'absolute', top: -1, right: 16, background: '#4f46e5', color: '#fff',
+                            fontSize: '0.6rem', fontWeight: 700, padding: '3px 10px', borderRadius: '0 0 8px 8px',
+                            letterSpacing: '0.04em', textTransform: 'uppercase',
+                          }}>
+                            Paket Anda
+                          </div>
+                        )}
+                        <h3 style={{ fontWeight: 700, fontSize: '0.98rem', color: '#0f172a', marginBottom: 8 }}>{plan.name}</h3>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>
+                          Rp {Number(plan.price).toLocaleString('id-ID')}
+                          <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}> /bulan</span>
+                        </div>
+                        <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: 16, lineHeight: 1.6 }}>
+                          {plan.description}
+                        </p>
+                        <button
+                          onClick={() => handleSubscribe(plan.id)}
+                          disabled={checkoutLoading === plan.id}
+                          style={{
+                            width: '100%', padding: '10px', borderRadius: 10, border: 'none',
+                            background: checkoutLoading === plan.id ? '#a5b4fc' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+                            color: '#fff', fontWeight: 700, fontSize: '0.82rem',
+                            cursor: checkoutLoading === plan.id ? 'not-allowed' : 'pointer',
+                            fontFamily: "'Poppins', sans-serif",
+                          }}
+                        >
+                          {checkoutLoading === plan.id ? 'Memproses...' : (isCurrent ? 'Perpanjang' : 'Pilih Paket')}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* ===== Belum aktif -> paket jadi fokus utama ===== */}
+            <div style={{
+              borderRadius: 20, padding: 26, marginBottom: 36, background: '#ffffff',
+              border: '1.5px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+              display: 'flex', alignItems: 'center', gap: 14, animation: 'fadeUp 0.55s 0.05s both',
+            }}>
               <div style={{
                 width: 46, height: 46, borderRadius: 12, background: '#f0f4ff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -223,74 +319,60 @@ export default function PelangganDashboard() {
                 </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Plans */}
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
-            {isActive ? 'Upgrade / Perpanjang Paket' : 'Pilih Paket'}
-          </h2>
-          <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Semua paket bisa dibayar langsung lewat Midtrans.</p>
-        </div>
+            <div style={{ marginBottom: 20 }}>
+              <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+                Pilih Paket
+              </h2>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Semua paket bisa dibayar langsung lewat Midtrans.</p>
+            </div>
 
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18, marginBottom: 56,
-        }}>
-          {plans.map((plan, i) => {
-            const isCurrent = subscription?.plan?.id === plan.id;
-            return (
-              <div
-                key={plan.id}
-                className="plan-card"
-                style={{
-                  background: '#fff', borderRadius: 18, padding: 22, position: 'relative',
-                  border: isCurrent ? '2px solid #4f46e5' : '1.5px solid #e2e8f0',
-                  boxShadow: isCurrent ? '0 12px 32px rgba(79,70,229,0.14)' : '0 2px 10px rgba(0,0,0,0.03)',
-                  animation: `fadeUp 0.5s ${0.1 + i * 0.08}s both`,
-                }}
-              >
-                {isCurrent && (
-                  <div style={{
-                    position: 'absolute', top: -1, right: 18, background: '#4f46e5', color: '#fff',
-                    fontSize: '0.62rem', fontWeight: 700, padding: '4px 12px', borderRadius: '0 0 8px 8px',
-                    letterSpacing: '0.04em', textTransform: 'uppercase',
-                  }}>
-                    Paket Anda
-                  </div>
-                )}
-                <h3 style={{ fontWeight: 700, fontSize: '1.02rem', color: '#0f172a', marginBottom: 8 }}>{plan.name}</h3>
-                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
-                  Rp {Number(plan.price).toLocaleString('id-ID')}
-                  <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}> /bulan</span>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 20, lineHeight: 1.65 }}>
-                  {plan.description}
-                </p>
-                <button
-                  onClick={() => handleSubscribe(plan.id)}
-                  disabled={checkoutLoading === plan.id}
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18, marginBottom: 56,
+            }}>
+              {plans.map((plan, i) => (
+                <div
+                  key={plan.id}
+                  className="plan-card"
                   style={{
-                    width: '100%', padding: '11px', borderRadius: 10, border: 'none',
-                    background: checkoutLoading === plan.id ? '#a5b4fc' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
-                    color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-                    cursor: checkoutLoading === plan.id ? 'not-allowed' : 'pointer',
-                    fontFamily: "'Poppins', sans-serif", display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', gap: 8, boxShadow: '0 6px 18px rgba(79,70,229,0.3)',
+                    background: '#fff', borderRadius: 18, padding: 22, position: 'relative',
+                    border: '1.5px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                    animation: `fadeUp 0.5s ${0.1 + i * 0.08}s both`,
                   }}
                 >
-                  {checkoutLoading === plan.id ? 'Memproses...' : (
-                    <>
-                      <i className="pi pi-arrow-right" style={{ fontSize: '0.75rem' }} /> Pilih Paket
-                    </>
-                  )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                  <h3 style={{ fontWeight: 700, fontSize: '1.02rem', color: '#0f172a', marginBottom: 8 }}>{plan.name}</h3>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
+                    Rp {Number(plan.price).toLocaleString('id-ID')}
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}> /bulan</span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 20, lineHeight: 1.65 }}>
+                    {plan.description}
+                  </p>
+                  <button
+                    onClick={() => handleSubscribe(plan.id)}
+                    disabled={checkoutLoading === plan.id}
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                      background: checkoutLoading === plan.id ? '#a5b4fc' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+                      color: '#fff', fontWeight: 700, fontSize: '0.85rem',
+                      cursor: checkoutLoading === plan.id ? 'not-allowed' : 'pointer',
+                      fontFamily: "'Poppins', sans-serif", display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8, boxShadow: '0 6px 18px rgba(79,70,229,0.3)',
+                    }}
+                  >
+                    {checkoutLoading === plan.id ? 'Memproses...' : (
+                      <>
+                        <i className="pi pi-arrow-right" style={{ fontSize: '0.75rem' }} /> Pilih Paket
+                      </>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
-        {/* Riwayat Pemesanan */}
+        {/* Riwayat Pemesanan - tetap tampil buat siapa aja */}
         <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Riwayat Pemesanan</h2>
