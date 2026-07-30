@@ -1,5 +1,4 @@
-// src/models/userModel.js
-import db from '../config/db.js'; // sesuaikan path koneksi knex kamu
+import { db } from '../core/config/knex.js';
 
 // =========================
 // CRUD DASAR
