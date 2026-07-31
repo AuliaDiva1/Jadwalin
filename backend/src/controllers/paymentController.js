@@ -64,6 +64,76 @@ export const createPaymentController = async (req, res) => {
   }
 };
 
+// ================= UJI COBA GRATIS =================
+export const startTrialController = async (req, res) => {
+  try {
+    const user_id = req.user.userId;
+    const { plan_id } = req.body;
+
+    if (!plan_id) {
+      return res.status(400).json({ success: false, message: 'plan_id wajib diisi' });
+    }
+
+    const plan = await db('subscription_plans').where({ id: plan_id, is_active: true }).first();
+    if (!plan) {
+      return res.status(404).json({ success: false, message: 'Plan tidak ditemukan' });
+    }
+
+    if (!plan.trial_days || plan.trial_days <= 0) {
+      return res.status(400).json({ success: false, message: 'Paket ini tidak menyediakan uji coba gratis' });
+    }
+
+    const user = await db('users').where({ id: user_id }).first();
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+    }
+
+    if (user.has_used_trial) {
+      return res.status(400).json({ success: false, message: 'Anda sudah pernah menggunakan uji coba gratis' });
+    }
+
+    if (user.subscription_status === 'active') {
+      return res.status(400).json({ success: false, message: 'Anda sudah memiliki paket aktif' });
+    }
+
+    const order_id = `TRIAL-${Date.now()}`;
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + plan.trial_days);
+
+    // Catat sebagai order dengan status 'trial' & amount 0, biar tetap muncul di riwayat
+    await db('orders').insert({
+      order_id,
+      user_id,
+      plan_id: plan.id,
+      gross_amount: 0,
+      status: 'trial',
+      created_at: now,
+      updated_at: now,
+    });
+
+    await db('users').where({ id: user_id }).update({
+      subscription_status: 'active',
+      subscription_plan_id: plan.id,
+      subscription_expires_at: expiresAt,
+      has_used_trial: true,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `Uji coba gratis ${plan.trial_days} hari untuk paket ${plan.name} berhasil diaktifkan`,
+      data: {
+        order_id,
+        plan_name: plan.name,
+        trial_days: plan.trial_days,
+        expires_at: expiresAt,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const handlePaymentNotification = async (req, res) => {
   try {
     const statusResponse = await snap.transaction.notification(req.body);

@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 const STATUS_STYLES = {
-  paid:      { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
-  settlement:{ bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
-  success:   { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
-  pending:   { bg: '#fef9c3', color: '#b45309', label: 'Menunggu' },
-  failed:    { bg: '#fee2e2', color: '#dc2626', label: 'Gagal' },
-  expired:   { bg: '#f1f5f9', color: '#64748b', label: 'Kedaluwarsa' },
-  cancel:    { bg: '#f1f5f9', color: '#64748b', label: 'Dibatalkan' },
+  paid:       { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
+  settlement: { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
+  success:    { bg: '#dcfce7', color: '#16a34a', label: 'Berhasil' },
+  trial:      { bg: '#ede9fe', color: '#7c3aed', label: 'Uji Coba Gratis' },
+  pending:    { bg: '#fef9c3', color: '#b45309', label: 'Menunggu' },
+  failed:     { bg: '#fee2e2', color: '#dc2626', label: 'Gagal' },
+  expired:    { bg: '#f1f5f9', color: '#64748b', label: 'Kedaluwarsa' },
+  cancel:     { bg: '#f1f5f9', color: '#64748b', label: 'Dibatalkan' },
 };
 
 function getStatusStyle(status) {
@@ -86,11 +87,26 @@ export default function PelangganDashboard() {
     }
   };
 
+  // sudah pernah pakai trial kalau ada satu aja transaksi berstatus 'trial' di riwayat
+  const hasUsedTrial = history.some((trx) => trx.status?.toLowerCase() === 'trial');
+
   const handleSubscribe = async (planId) => {
     setCheckoutLoading(planId);
     const token = localStorage.getItem('TOKEN');
+    const plan = plans.find((p) => p.id === planId);
+    const isTrialEligible = plan?.trial_days > 0 && !hasUsedTrial && !isActive;
 
     try {
+      if (isTrialEligible) {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/payments/trial`,
+          { plan_id: planId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        window.location.reload();
+        return;
+      }
+
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/payments/checkout`,
         { plan_id: planId },
@@ -109,7 +125,7 @@ export default function PelangganDashboard() {
         },
       });
     } catch (err) {
-      alert('Gagal memulai pembayaran: ' + (err.response?.data?.message || err.message));
+      alert('Gagal memulai: ' + (err.response?.data?.message || err.message));
       setCheckoutLoading(null);
     }
   };
@@ -330,44 +346,59 @@ export default function PelangganDashboard() {
             <div style={{
               display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18, marginBottom: 56,
             }}>
-              {plans.map((plan, i) => (
-                <div
-                  key={plan.id}
-                  className="plan-card"
-                  style={{
-                    background: '#fff', borderRadius: 18, padding: 22, position: 'relative',
-                    border: '1.5px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                    animation: `fadeUp 0.5s ${0.1 + i * 0.08}s both`,
-                  }}
-                >
-                  <h3 style={{ fontWeight: 700, fontSize: '1.02rem', color: '#0f172a', marginBottom: 8 }}>{plan.name}</h3>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
-                    Rp {Number(plan.price).toLocaleString('id-ID')}
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}> /bulan</span>
-                  </div>
-                  <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 20, lineHeight: 1.65 }}>
-                    {plan.description}
-                  </p>
-                  <button
-                    onClick={() => handleSubscribe(plan.id)}
-                    disabled={checkoutLoading === plan.id}
+              {plans.map((plan, i) => {
+                const isTrialAvailable = plan.trial_days > 0 && !hasUsedTrial;
+                return (
+                  <div
+                    key={plan.id}
+                    className="plan-card"
                     style={{
-                      width: '100%', padding: '11px', borderRadius: 10, border: 'none',
-                      background: checkoutLoading === plan.id ? '#a5b4fc' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
-                      color: '#fff', fontWeight: 700, fontSize: '0.85rem',
-                      cursor: checkoutLoading === plan.id ? 'not-allowed' : 'pointer',
-                      fontFamily: "'Poppins', sans-serif", display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', gap: 8, boxShadow: '0 6px 18px rgba(79,70,229,0.3)',
+                      background: '#fff', borderRadius: 18, padding: 22, position: 'relative',
+                      border: isTrialAvailable ? '1.5px solid #c4b5fd' : '1.5px solid #e2e8f0',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                      animation: `fadeUp 0.5s ${0.1 + i * 0.08}s both`,
                     }}
                   >
-                    {checkoutLoading === plan.id ? 'Memproses...' : (
-                      <>
-                        <i className="pi pi-arrow-right" style={{ fontSize: '0.75rem' }} /> Pilih Paket
-                      </>
+                    <h3 style={{ fontWeight: 700, fontSize: '1.02rem', color: '#0f172a', marginBottom: 8 }}>{plan.name}</h3>
+
+                    {isTrialAvailable && (
+                      <span style={{
+                        display: 'inline-block', marginBottom: 8, padding: '3px 10px', borderRadius: 99,
+                        background: '#ede9fe', color: '#7c3aed', fontWeight: 700, fontSize: '0.65rem',
+                      }}>
+                        Uji coba {plan.trial_days} hari gratis
+                      </span>
                     )}
-                  </button>
-                </div>
-              ))}
+
+                    <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
+                      Rp {Number(plan.price).toLocaleString('id-ID')}
+                      <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}> /bulan</span>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 20, lineHeight: 1.65 }}>
+                      {plan.description}
+                    </p>
+                    <button
+                      onClick={() => handleSubscribe(plan.id)}
+                      disabled={checkoutLoading === plan.id}
+                      style={{
+                        width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                        background: checkoutLoading === plan.id ? '#a5b4fc' : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+                        color: '#fff', fontWeight: 700, fontSize: '0.85rem',
+                        cursor: checkoutLoading === plan.id ? 'not-allowed' : 'pointer',
+                        fontFamily: "'Poppins', sans-serif", display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 8, boxShadow: '0 6px 18px rgba(79,70,229,0.3)',
+                      }}
+                    >
+                      {checkoutLoading === plan.id ? 'Memproses...' : (
+                        <>
+                          <i className={`pi ${isTrialAvailable ? 'pi-gift' : 'pi-arrow-right'}`} style={{ fontSize: '0.75rem' }} />
+                          {isTrialAvailable ? `Coba Gratis ${plan.trial_days} Hari` : 'Pilih Paket'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </>
         )}

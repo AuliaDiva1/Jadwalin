@@ -8,7 +8,7 @@ interface PricingFeature { text: string; included: boolean; }
 interface PricingPlan {
   name: string; price: string; period: string; tagline: string;
   color: string; accentColor: string; badge: string | null; features: PricingFeature[];
-  pilotPrice: string;
+  pilotPrice: string; trialDays: number; yearlyPrice: string | null;
 }
 
 /* ── drag state per card ── */
@@ -143,50 +143,53 @@ export default function LandingERP() {
 
   const pricingPlans: PricingPlan[] = [
     {
-      name: 'Starter', price: 'Rp 249.000', period: '/bulan', pilotPrice: 'Rp 174.000',
-      tagline: 'Ideal untuk IKM yang baru memulai digitalisasi',
+      name: 'Starter', price: 'Rp 1.500.000', period: '/bulan', pilotPrice: 'Rp 1.050.000',
+      yearlyPrice: 'Rp 18.000.000/tahun', trialDays: 30,
+      tagline: 'Cocok untuk pabrik kecil dengan ≤5 mesin',
       color: '#0ea5e9', accentColor: '#bae6fd', badge: null,
       features: [
-        { text: 'Jadwal produksi otomatis', included: true },
-        { text: 'Tampilan jadwal visual (Gantt Chart)', included: true },
-        { text: 'Notifikasi stok bahan baku', included: true },
-        { text: 'Dashboard pemantauan produksi', included: true },
-        { text: 'Prioritas pesanan otomatis', included: true },
-        { text: 'Prediksi waktu selesai otomatis', included: false },
-        { text: 'Optimasi jadwal tingkat lanjut', included: false },
-        { text: 'Multi-lokasi & laporan analitik', included: false },
+        { text: 'Modul Penjadwalan Inti', included: true },
+        { text: '1 akun Admin', included: true },
+        { text: 'Laporan PDF Standar', included: true },
+        { text: 'Training Online', included: true },
+        { text: 'Dukungan Email (SLA 2x24 jam)', included: true },
+        { text: 'Uji coba gratis 30 hari', included: true },
+        { text: 'Multi-akun (Manajer/Staff)', included: false },
+        { text: 'Integrasi Google Calendar', included: false },
         { text: 'Akses API & integrasi sistem lain', included: false },
       ],
     },
     {
-      name: 'Growth', price: 'Rp 399.000', period: '/bulan', pilotPrice: 'Rp 279.000',
-      tagline: 'Untuk pabrik yang sedang berkembang pesat',
+      name: 'Growth', price: 'Rp 2.000.000', period: '/bulan', pilotPrice: 'Rp 1.400.000',
+      yearlyPrice: 'Rp 24.000.000/tahun', trialDays: 0,
+      tagline: 'Cocok untuk pabrik menengah dengan 6–15 mesin',
       color: '#4f46e5', accentColor: '#c7d2fe', badge: 'Paling Populer',
       features: [
         { text: 'Semua fitur Starter', included: true },
-        { text: 'Prediksi waktu selesai otomatis', included: true },
-        { text: 'Prioritas pesanan otomatis', included: true },
-        { text: 'Optimasi jadwal tingkat lanjut', included: true },
-        { text: 'Multi-lokasi produksi', included: true },
+        { text: '1 akun Admin', included: true },
+        { text: '1 akun Manajer Produksi', included: true },
+        { text: '1 akun Staff Gudang', included: true },
+        { text: 'Integrasi Google Calendar', included: true },
+        { text: 'Dukungan Prioritas WA/Telepon (SLA 1x24 jam)', included: true },
         { text: 'Laporan analitik mingguan', included: true },
-        { text: 'Dukungan prioritas', included: true },
         { text: 'Akses API & integrasi sistem lain', included: false },
         { text: 'Dedicated account manager', included: false },
       ],
     },
     {
-      name: 'Pro', price: 'Rp 599.000', period: '/bulan', pilotPrice: 'Rp 419.000',
-      tagline: 'Solusi lengkap untuk Industri Menengah ke Atas',
+      name: 'Pro', price: 'Rp 3.500.000', period: '/bulan', pilotPrice: 'Rp 2.450.000',
+      yearlyPrice: null, trialDays: 0,
+      tagline: 'Cocok untuk pabrik besar dengan lebih dari 15 mesin',
       color: '#7c3aed', accentColor: '#ddd6fe', badge: null,
       features: [
         { text: 'Semua fitur Growth', included: true },
+        { text: 'Multi-lokasi produksi', included: true },
         { text: 'Akses API penuh', included: true },
         { text: 'Laporan analitik kustom', included: true },
         { text: 'SLA uptime terjamin', included: true },
         { text: 'Dedicated account manager', included: true },
         { text: 'Training on-site untuk tim produksi', included: true },
         { text: 'Integrasi dengan sistem eksternal', included: true },
-        { text: 'Konfigurasi sesuai kebutuhan pabrik', included: true },
         { text: 'Onboarding diprioritaskan', included: true },
       ],
     },
@@ -198,6 +201,7 @@ export default function LandingERP() {
     { q: 'Apakah saya perlu input tanggal target selesai secara manual?', a: 'Tidak. Sistem memprediksi otomatis kapan sebuah pesanan diperkirakan selesai berdasarkan riwayat produksi sebelumnya.' },
     { q: 'Apa yang saya lihat setelah jadwal dibuat?', a: 'Anda akan melihat tampilan visual (Gantt Chart) yang menunjukkan urutan pengerjaan tiap pesanan di setiap mesin, lengkap dengan estimasi waktu selesai produksi.' },
     { q: 'Siapa saja yang bisa menggunakan sistem ini di perusahaan saya?', a: 'Sistem mendukung tiga jenis pengguna: Admin/Pemilik, Manajer Produksi, dan Staff Gudang — masing-masing dengan akses yang sesuai perannya.' },
+    { q: 'Apakah paket Starter benar-benar gratis dicoba?', a: 'Ya. Paket Starter menyediakan uji coba gratis selama 30 hari tanpa perlu memasukkan metode pembayaran di muka.' },
     { q: 'Apakah data produksi saya aman?', a: 'Ya. Setiap akun punya akses yang terpisah dan aman, serta data disimpan di server dengan enkripsi standar industri.' },
   ];
 
@@ -351,6 +355,7 @@ export default function LandingERP() {
 
         /* pill badge */
         .pilot-badge { animation: pilotPulse 2.5s ease-in-out infinite; }
+        .trial-badge { animation: pilotPulse 2.5s ease-in-out infinite; }
 
         .faq-item { transition: border-color 0.25s, box-shadow 0.25s; }
         .faq-item:hover { border-color: #a5b4fc !important; }
@@ -506,7 +511,7 @@ export default function LandingERP() {
               <div className="hero-cta" style={{display:'flex',gap:12,flexWrap:'wrap'}}>
                 <button onClick={goToLogin} className="shimmer-btn"
                   style={{padding:'14px 30px',borderRadius:12,border:'none',color:'#fff',fontWeight:700,fontSize:'0.95rem',cursor:'pointer',fontFamily:"'Poppins',sans-serif",display:'flex',alignItems:'center',gap:8,boxShadow:'0 8px 28px rgba(79,70,229,0.4)'}}>
-                  <i className="pi pi-sign-in"/> Coba Sekarang
+                  <i className="pi pi-sign-in"/> Coba Gratis 30 Hari
                 </button>
                 <button onClick={()=>document.getElementById('fitur')?.scrollIntoView({behavior:'smooth'})}
                   style={{padding:'14px 30px',borderRadius:12,border:'2px solid #e2e8f0',background:'#fff',fontWeight:600,fontSize:'0.95rem',cursor:'pointer',color:'#374151',fontFamily:"'Poppins',sans-serif",display:'flex',alignItems:'center',gap:8,transition:'all 0.25s'}}
@@ -736,6 +741,7 @@ export default function LandingERP() {
               const d = drags[idx];
               const isPopular = plan.badge === 'Paling Populer';
               const isDragging = d.dragging;
+              const hasTrial = plan.trialDays > 0;
 
               const cardStyle: React.CSSProperties = {
                 position: 'relative',
@@ -748,7 +754,7 @@ export default function LandingERP() {
                 cursor: isDragging ? 'grabbing' : 'grab',
                 borderRadius: 24,
                 background: '#ffffff',
-                border: isPopular ? `2px solid ${plan.color}` : '1.5px solid #e8ecf4',
+                border: isPopular ? `2px solid ${plan.color}` : hasTrial ? `2px solid #c4b5fd` : '1.5px solid #e8ecf4',
                 boxShadow: isDragging
                   ? `0 32px 80px rgba(0,0,0,0.22), 0 0 0 3px ${plan.color}30`
                   : isPopular
@@ -773,13 +779,18 @@ export default function LandingERP() {
                       ⭐ Paling Populer
                     </div>
                   )}
+                  {!isPopular && hasTrial && (
+                    <div style={{position:'absolute',top:-1,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(90deg,#7c3aed,#c4b5fd)',color:'#fff',fontSize:'0.65rem',fontWeight:800,padding:'5px 20px',borderRadius:'0 0 12px 12px',letterSpacing:'0.06em',textTransform:'uppercase',boxShadow:'0 4px 16px rgba(124,58,237,0.4)',whiteSpace:'nowrap'}}>
+                      🎁 Uji Coba {plan.trialDays} Hari Gratis
+                    </div>
+                  )}
 
                   <div className="drag-hint" style={{position:'absolute',top:14,right:16,opacity:isDragging?0:0.4,transition:'opacity 0.3s',pointerEvents:'none',display:'flex',alignItems:'center',gap:4}}>
                     <i className="pi pi-arrows-alt" style={{fontSize:'0.7rem',color:'#94a3b8'}}/>
                     <span style={{fontSize:'0.6rem',color:'#94a3b8',fontWeight:600}}>drag</span>
                   </div>
 
-                  <div style={{padding:'32px 28px',paddingTop:isPopular?48:32}}>
+                  <div style={{padding:'32px 28px',paddingTop:(isPopular||hasTrial)?48:32}}>
                     <div style={{position:'absolute',top:0,left:0,right:0,height:4,background:`linear-gradient(90deg,${plan.color},${plan.color}88)`,borderRadius:'24px 24px 0 0'}}/>
 
                     <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
@@ -799,6 +810,11 @@ export default function LandingERP() {
                         <span style={{fontSize:'1.65rem',fontWeight:800,color:'#0f172a',letterSpacing:'-0.03em',lineHeight:1}}>{plan.price}</span>
                         <span style={{fontSize:'0.78rem',color:'#94a3b8',fontWeight:500}}>{plan.period}</span>
                       </div>
+                      {plan.yearlyPrice && (
+                        <div style={{marginTop:4,fontSize:'0.72rem',color:'#94a3b8'}}>
+                          atau {plan.yearlyPrice}
+                        </div>
+                      )}
                       <div style={{marginTop:8,display:'inline-flex',alignItems:'center',gap:5,background:'#fefce8',border:'1px solid #fde68a',borderRadius:7,padding:'4px 10px'}}>
                         <i className="pi pi-tag" style={{fontSize:'0.58rem',color:'#f59e0b'}}/>
                         <span style={{fontSize:'0.68rem',fontWeight:700,color:'#b45309'}}>Hemat 30% → {plan.pilotPrice}/bln</span>
@@ -828,7 +844,8 @@ export default function LandingERP() {
                       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 10px 28px ${plan.color}55`;}}
                       onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow=`0 6px 20px ${plan.color}40`;}}
                     >
-                      <i className="pi pi-arrow-right" style={{fontSize:'0.8rem'}}/> Mulai Sekarang
+                      <i className={`pi ${hasTrial ? 'pi-gift' : 'pi-arrow-right'}`} style={{fontSize:'0.8rem'}}/>
+                      {hasTrial ? `Coba Gratis ${plan.trialDays} Hari` : 'Mulai Sekarang'}
                     </button>
                   </div>
                 </div>
