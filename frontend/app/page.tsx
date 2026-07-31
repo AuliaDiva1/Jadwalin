@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface PricingFeature { text: string; included: boolean; }
@@ -11,115 +11,18 @@ interface PricingPlan {
   pilotPrice: string; trialDays: number; yearlyPrice: string | null;
 }
 
-/* ── drag state per card ── */
-interface DragState {
-  dragging: boolean;
-  startX: number; startY: number;
-  x: number; y: number;
-  vx: number; vy: number;
-  rotation: number;
-}
-
-const INIT_DRAG = (): DragState => ({ dragging: false, startX: 0, startY: 0, x: 0, y: 0, vx: 0, vy: 0, rotation: 0 });
-
 export default function LandingERP() {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentYear] = useState(new Date().getFullYear());
-  const [drags, setDrags] = useState<DragState[]>([INIT_DRAG(), INIT_DRAG(), INIT_DRAG()]);
-  const [zOrders, setZOrders] = useState([1, 2, 3]);
-  const [topZ, setTopZ] = useState(3);
-  const rafRef = useRef<number | null>(null);
-  const dragRef = useRef<{ idx: number; lastX: number; lastY: number; lastTime: number } | null>(null);
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', h);
     return () => window.removeEventListener('scroll', h);
   }, []);
-
-  /* ── drag handlers ── */
-  const startDrag = useCallback((idx: number, clientX: number, clientY: number) => {
-    const newTopZ = topZ + 1;
-    setTopZ(newTopZ);
-    setZOrders(z => { const n = [...z]; n[idx] = newTopZ; return n; });
-    setDrags(d => {
-      const n = [...d];
-      n[idx] = { ...n[idx], dragging: true, startX: clientX - n[idx].x, startY: clientY - n[idx].y, vx: 0, vy: 0 };
-      return n;
-    });
-    dragRef.current = { idx, lastX: clientX, lastY: clientY, lastTime: Date.now() };
-  }, [topZ]);
-
-  const moveDrag = useCallback((clientX: number, clientY: number) => {
-    if (!dragRef.current) return;
-    const { idx, lastX, lastY, lastTime } = dragRef.current;
-    const now = Date.now();
-    const dt = Math.max(now - lastTime, 1);
-    const vx = (clientX - lastX) / dt * 16;
-    const vy = (clientY - lastY) / dt * 16;
-    dragRef.current = { idx, lastX: clientX, lastY: clientY, lastTime: now };
-    setDrags(d => {
-      const n = [...d];
-      const x = clientX - n[idx].startX;
-      const y = clientY - n[idx].startY;
-      const rot = Math.max(-18, Math.min(18, vx * 1.2));
-      n[idx] = { ...n[idx], x, y, vx, vy, rotation: rot };
-      return n;
-    });
-  }, []);
-
-  const endDrag = useCallback((idx: number) => {
-    dragRef.current = null;
-    setDrags(d => {
-      const n = [...d];
-      n[idx] = { ...n[idx], dragging: false };
-      return n;
-    });
-    /* spring back with inertia */
-    const spring = () => {
-      setDrags(d => {
-        const n = [...d];
-        const c = n[idx];
-        if (c.dragging) return n;
-        const friction = 0.82;
-        const stiffness = 0.12;
-        let vx = c.vx * friction - c.x * stiffness;
-        let vy = c.vy * friction - c.y * stiffness;
-        let x = c.x + vx;
-        let y = c.y + vy;
-        const rot = c.rotation * 0.78;
-        if (Math.abs(x) < 0.3 && Math.abs(y) < 0.3 && Math.abs(vx) < 0.1) {
-          x = 0; y = 0; vx = 0; vy = 0;
-        }
-        n[idx] = { ...c, x, y, vx, vy, rotation: rot };
-        return n;
-      });
-      rafRef.current = requestAnimationFrame(spring);
-    };
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(spring);
-  }, []);
-
-  useEffect(() => {
-    const mm = (e: MouseEvent) => moveDrag(e.clientX, e.clientY);
-    const mu = (e: MouseEvent) => { if (dragRef.current) endDrag(dragRef.current.idx); };
-    const tm = (e: TouchEvent) => { if (e.touches[0]) moveDrag(e.touches[0].clientX, e.touches[0].clientY); };
-    const tu = (e: TouchEvent) => { if (dragRef.current) endDrag(dragRef.current.idx); };
-    window.addEventListener('mousemove', mm);
-    window.addEventListener('mouseup', mu);
-    window.addEventListener('touchmove', tm, { passive: false });
-    window.addEventListener('touchend', tu);
-    return () => {
-      window.removeEventListener('mousemove', mm);
-      window.removeEventListener('mouseup', mu);
-      window.removeEventListener('touchmove', tm);
-      window.removeEventListener('touchend', tu);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [moveDrag, endDrag]);
 
   /* ── DATA (copy diringkas, fokus manfaat bukan istilah teknis) ── */
   const features = [
@@ -269,19 +172,9 @@ export default function LandingERP() {
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pilotPulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.35); }
-          50%      { box-shadow: 0 0 0 8px rgba(251,191,36,0); }
-        }
         @keyframes cardPop {
           from { opacity: 0; transform: translateY(32px) scale(0.95); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes wiggle {
-          0%   { transform: rotate(0deg); }
-          25%  { transform: rotate(-4deg); }
-          75%  { transform: rotate(4deg); }
-          100% { transform: rotate(0deg); }
         }
         @keyframes glow {
           0%,100% { box-shadow: 0 0 0 0 rgba(79,70,229,0); }
@@ -345,17 +238,6 @@ export default function LandingERP() {
           transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s;
         }
         .role-card:hover { transform:translateY(-6px); box-shadow:0 20px 48px rgba(0,0,0,0.1); }
-
-        /* ── PRICING DRAG CARDS ── */
-        .price-card-wrap {
-          user-select: none;
-          touch-action: none;
-        }
-        .price-card-wrap:hover .drag-hint { opacity: 1 !important; }
-
-        /* pill badge */
-        .pilot-badge { animation: pilotPulse 2.5s ease-in-out infinite; }
-        .trial-badge { animation: pilotPulse 2.5s ease-in-out infinite; }
 
         .faq-item { transition: border-color 0.25s, box-shadow 0.25s; }
         .faq-item:hover { border-color: #a5b4fc !important; }
@@ -496,12 +378,12 @@ export default function LandingERP() {
                   <i className="pi pi-verified" style={{color:'#fff',fontSize:'0.65rem'}}/>
                   <span style={{fontSize:'0.7rem',fontWeight:700,color:'#fff'}}>Solusi ERP Manufaktur</span>
                 </div>
-                <span style={{fontSize:'0.78rem',fontWeight:600,color:'#4f46e5'}}>Dibuat untuk pabrik skala kecil - menengah</span>
+                <span style={{fontSize:'0.78rem',fontWeight:600,color:'#4f46e5'}}>Jadwalin</span>
               </div>
 
               <h1 className="hero-title" style={{fontSize:'clamp(2.2rem,5vw,3.6rem)',fontWeight:800,lineHeight:1.12,letterSpacing:'-0.03em',color:'#0f172a',marginBottom:20}}>
-                Atur Jadwal Produksi<br/>
-                <span className="gradient-text">Tanpa Ribet, Otomatis</span>
+              Penjadwalan Produksi<br/>
+                <span className="gradient-text">Lebih Cerdas & Optimal</span>
               </h1>
 
               <p className="hero-sub" style={{fontSize:'1rem',color:'#475569',lineHeight:1.85,marginBottom:36,maxWidth:490}}>
@@ -704,156 +586,131 @@ export default function LandingERP() {
         </div>
       </section>
 
-      {/* ══════════════ PRICING — WHITE + DRAGGABLE ══════════════ */}
-      <section id="harga" style={{padding:'100px 32px 120px',background:'#ffffff',position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(79,70,229,0.055) 1px,transparent 1px)',backgroundSize:'28px 28px',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:-180,right:'10%',width:500,height:500,borderRadius:'50%',background:'radial-gradient(circle,rgba(79,70,229,0.07) 0%,transparent 65%)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:-150,left:'5%',width:420,height:420,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,58,237,0.06) 0%,transparent 65%)',pointerEvents:'none'}}/>
+      {/* ══════════════ PRICING — CLEAN & ELEVATED ══════════════ */}
+      <section id="harga" style={{padding:'100px 32px 120px',background:'#f8faff',position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(79,70,229,0.05) 1px,transparent 1px)',backgroundSize:'28px 28px',pointerEvents:'none'}}/>
 
-        <div style={{maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1}}>
-          <div style={{textAlign:'center',marginBottom:20}}>
+        <div style={{maxWidth:1120,margin:'0 auto',position:'relative',zIndex:1}}>
+          <div style={{textAlign:'center',marginBottom:16}}>
             <div style={{display:'inline-block',background:'#f0f4ff',color:'#4f46e5',borderRadius:8,padding:'4px 14px',fontSize:'0.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16}}>Harga Paket</div>
-            <h2 style={{fontSize:'clamp(2rem,4.5vw,3rem)',fontWeight:800,color:'#0f172a',marginBottom:16,letterSpacing:'-0.03em',lineHeight:1.15}}>
+            <h2 style={{fontSize:'clamp(2rem,4.5vw,3rem)',fontWeight:800,color:'#0f172a',marginBottom:14,letterSpacing:'-0.03em',lineHeight:1.15}}>
               Pilih Paket yang{' '}
               <span className="gradient-text">Tepat untuk Anda</span>
             </h2>
-            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:500,margin:'0 auto',lineHeight:1.8}}>
-              Tiga paket fleksibel sesuai skala kebutuhan pabrik Anda.<br/>
+            <p style={{color:'#64748b',fontSize:'1rem',maxWidth:480,margin:'0 auto',lineHeight:1.8}}>
+              Mulai gratis, upgrade kapan saja sesuai skala pabrik Anda.
             </p>
           </div>
 
-          <div className="pilot-badge" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,background:'linear-gradient(135deg,#fefce8,#fef9c3)',border:'1.5px solid #fbbf24',borderRadius:14,padding:'12px 24px',maxWidth:'max-content',margin:'28px auto 72px'}}>
-            <div style={{width:30,height:30,borderRadius:8,background:'linear-gradient(135deg,#fbbf24,#f59e0b)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 12px rgba(251,191,36,0.4)'}}>
-              <i className="pi pi-star-fill" style={{color:'#fff',fontSize:'0.7rem'}}/>
-            </div>
-            <div>
-              <span style={{fontSize:'0.82rem',fontWeight:700,color:'#92400e'}}> Promo Pilot </span>
-              <span style={{fontSize:'0.82rem',color:'#78350f'}}>3 pelanggan pertama dapat </span>
-              <span style={{fontSize:'0.82rem',fontWeight:800,color:'#b45309'}}>diskon 30% selama 6 bulan pertama</span>
-            </div>
+          {/* Promo strip — 1 baris tipis, bukan box besar */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,margin:'28px auto 56px',fontSize:'0.82rem',color:'#78350f',flexWrap:'wrap',textAlign:'center'}}>
+            <i className="pi pi-star-fill" style={{color:'#f59e0b',fontSize:'0.75rem'}}/>
+            <span><strong style={{color:'#b45309'}}>Promo Pilot:</strong> 3 pelanggan pertama diskon 30% selama 6 bulan pertama</span>
           </div>
 
           <div
             className="pricing-row"
-            style={{display:'flex',gap:24,justifyContent:'center',alignItems:'flex-start',minHeight:640,flexWrap:'wrap'}}
+            style={{display:'flex',gap:0,justifyContent:'center',alignItems:'stretch',flexWrap:'wrap'}}
           >
             {pricingPlans.map((plan, idx) => {
-              const d = drags[idx];
               const isPopular = plan.badge === 'Paling Populer';
-              const isDragging = d.dragging;
               const hasTrial = plan.trialDays > 0;
-
-              const cardStyle: React.CSSProperties = {
-                position: 'relative',
-                width: 340,
-                maxWidth: '100%',
-                flexShrink: 0,
-                transform: `translate(${d.x}px,${d.y}px) rotate(${d.rotation}deg) ${isDragging ? 'scale(1.04)' : 'scale(1)'}`,
-                transition: isDragging ? 'box-shadow 0.2s, filter 0.2s' : 'box-shadow 0.4s, filter 0.2s',
-                zIndex: zOrders[idx],
-                cursor: isDragging ? 'grabbing' : 'grab',
-                borderRadius: 24,
-                background: '#ffffff',
-                border: isPopular ? `2px solid ${plan.color}` : hasTrial ? `2px solid #c4b5fd` : '1.5px solid #e8ecf4',
-                boxShadow: isDragging
-                  ? `0 32px 80px rgba(0,0,0,0.22), 0 0 0 3px ${plan.color}30`
-                  : isPopular
-                  ? `0 20px 60px ${plan.color}22, 0 4px 16px rgba(0,0,0,0.06)`
-                  : '0 4px 24px rgba(0,0,0,0.06)',
-                filter: isDragging ? 'brightness(1.02)' : 'brightness(1)',
-                animation: `cardPop 0.65s ${0.1+idx*0.15}s both`,
-                userSelect: 'none',
-                willChange: 'transform',
-              };
 
               return (
                 <div
                   key={idx}
-                  className="price-card-wrap"
-                  style={cardStyle}
-                  onMouseDown={e => { e.preventDefault(); startDrag(idx, e.clientX, e.clientY); }}
-                  onTouchStart={e => { startDrag(idx, e.touches[0].clientX, e.touches[0].clientY); }}
+                  style={{
+                    position: 'relative',
+                    width: 340,
+                    maxWidth: '100%',
+                    flexShrink: 0,
+                    margin: isPopular ? '0 -8px' : 0,
+                    zIndex: isPopular ? 2 : 1,
+                    transform: isPopular ? 'scale(1.06)' : 'scale(1)',
+                    borderRadius: 24,
+                    background: isPopular
+                      ? 'linear-gradient(160deg,#312e81 0%,#4f46e5 55%,#6d28d9 100%)'
+                      : '#ffffff',
+                    border: isPopular ? 'none' : '1.5px solid #e8ecf4',
+                    boxShadow: isPopular
+                      ? '0 32px 70px rgba(79,70,229,0.35)'
+                      : '0 4px 24px rgba(15,23,42,0.05)',
+                    padding: '34px 28px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s',
+                    animation: `cardPop 0.65s ${0.1+idx*0.15}s both`,
+                  }}
+                  onMouseEnter={e=>{ if(!isPopular){ e.currentTarget.style.transform='translateY(-6px)'; e.currentTarget.style.boxShadow='0 20px 48px rgba(15,23,42,0.1)'; } }}
+                  onMouseLeave={e=>{ if(!isPopular){ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 4px 24px rgba(15,23,42,0.05)'; } }}
                 >
                   {isPopular && (
-                    <div style={{position:'absolute',top:-1,left:'50%',transform:'translateX(-50%)',background:`linear-gradient(90deg,${plan.color},#7c3aed)`,color:'#fff',fontSize:'0.65rem',fontWeight:800,padding:'5px 20px',borderRadius:'0 0 12px 12px',letterSpacing:'0.06em',textTransform:'uppercase',boxShadow:`0 4px 16px ${plan.color}50`,whiteSpace:'nowrap'}}>
+                    <div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(90deg,#fbbf24,#f59e0b)',color:'#78350f',fontSize:'0.65rem',fontWeight:800,padding:'6px 18px',borderRadius:99,letterSpacing:'0.05em',textTransform:'uppercase',boxShadow:'0 6px 16px rgba(251,191,36,0.5)',whiteSpace:'nowrap'}}>
                       ⭐ Paling Populer
                     </div>
                   )}
-                  {!isPopular && hasTrial && (
-                    <div style={{position:'absolute',top:-1,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(90deg,#7c3aed,#c4b5fd)',color:'#fff',fontSize:'0.65rem',fontWeight:800,padding:'5px 20px',borderRadius:'0 0 12px 12px',letterSpacing:'0.06em',textTransform:'uppercase',boxShadow:'0 4px 16px rgba(124,58,237,0.4)',whiteSpace:'nowrap'}}>
-                      🎁 Uji Coba {plan.trialDays} Hari Gratis
+
+                  <div style={{marginBottom:6}}>
+                    <span style={{fontSize:'0.8rem',fontWeight:700,color:isPopular?'#c7d2fe':plan.color}}>{plan.name}</span>
+                  </div>
+                  <p style={{fontSize:'0.8rem',color:isPopular?'rgba(255,255,255,0.7)':'#94a3b8',lineHeight:1.6,marginBottom:22,minHeight:38}}>
+                    {plan.tagline}
+                  </p>
+
+                  <div style={{display:'flex',alignItems:'baseline',gap:5,marginBottom:2}}>
+                    <span style={{fontSize:'2.1rem',fontWeight:800,color:isPopular?'#fff':'#0f172a',letterSpacing:'-0.03em',lineHeight:1}}>{plan.price}</span>
+                    <span style={{fontSize:'0.82rem',color:isPopular?'rgba(255,255,255,0.65)':'#94a3b8',fontWeight:500}}>{plan.period}</span>
+                  </div>
+                  {plan.yearlyPrice && (
+                    <div style={{fontSize:'0.75rem',color:isPopular?'rgba(255,255,255,0.6)':'#94a3b8',marginBottom:hasTrial?10:0}}>
+                      atau {plan.yearlyPrice}
+                    </div>
+                  )}
+                  {hasTrial && (
+                    <div style={{display:'inline-flex',alignItems:'center',gap:6,marginTop:8,marginBottom:4,background:isPopular?'rgba(255,255,255,0.12)':'#f5f3ff',border:isPopular?'1px solid rgba(255,255,255,0.25)':'1px solid #ddd6fe',borderRadius:8,padding:'5px 12px',width:'fit-content'}}>
+                      <i className="pi pi-gift" style={{fontSize:'0.65rem',color:isPopular?'#c4b5fd':'#7c3aed'}}/>
+                      <span style={{fontSize:'0.7rem',fontWeight:700,color:isPopular?'#e0e7ff':'#7c3aed'}}>Uji coba {plan.trialDays} hari gratis</span>
                     </div>
                   )}
 
-                  <div className="drag-hint" style={{position:'absolute',top:14,right:16,opacity:isDragging?0:0.4,transition:'opacity 0.3s',pointerEvents:'none',display:'flex',alignItems:'center',gap:4}}>
-                    <i className="pi pi-arrows-alt" style={{fontSize:'0.7rem',color:'#94a3b8'}}/>
-                    <span style={{fontSize:'0.6rem',color:'#94a3b8',fontWeight:600}}>drag</span>
-                  </div>
+                  <button
+                    onClick={goToLogin}
+                    style={{
+                      width:'100%', marginTop:24, marginBottom:26, padding:'13px 20px', borderRadius:12, border:'none',
+                      background: isPopular ? '#ffffff' : 'linear-gradient(135deg,#4f46e5,#4338ca)',
+                      color: isPopular ? '#4338ca' : '#fff',
+                      fontWeight:700, fontSize:'0.875rem', cursor:'pointer', fontFamily:"'Poppins',sans-serif",
+                      display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                      boxShadow: isPopular ? '0 8px 20px rgba(0,0,0,0.15)' : '0 6px 20px rgba(79,70,229,0.35)',
+                      transition:'transform 0.2s, box-shadow 0.2s',
+                    }}
+                    onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.transform='translateY(0)'; }}
+                  >
+                    <i className={`pi ${hasTrial ? 'pi-gift' : 'pi-arrow-right'}`} style={{fontSize:'0.8rem'}}/>
+                    {hasTrial ? `Coba Gratis ${plan.trialDays} Hari` : 'Mulai Sekarang'}
+                  </button>
 
-                  <div style={{padding:'32px 28px',paddingTop:(isPopular||hasTrial)?48:32}}>
-                    <div style={{position:'absolute',top:0,left:0,right:0,height:4,background:`linear-gradient(90deg,${plan.color},${plan.color}88)`,borderRadius:'24px 24px 0 0'}}/>
+                  <div style={{height:1,background:isPopular?'rgba(255,255,255,0.15)':'#f1f5f9',marginBottom:20}}/>
 
-                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-                      <div style={{width:36,height:36,borderRadius:10,background:`${plan.color}12`,border:`1px solid ${plan.color}30`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <i className={`pi ${idx===0?'pi-star':idx===1?'pi-bolt':'pi-shield'}`} style={{color:plan.color,fontSize:'0.9rem'}}/>
+                  <p style={{fontSize:'0.72rem',fontWeight:700,color:isPopular?'rgba(255,255,255,0.55)':'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:16}}>
+                    {idx === 0 ? 'Termasuk' : `Semua fitur ${pricingPlans[idx-1].name}, plus:`}
+                  </p>
+
+                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                    {plan.features.filter(f=>f.included).slice(0, idx===0?6:5).map((feat,j)=>(
+                      <div key={j} style={{display:'flex',alignItems:'flex-start',gap:9}}>
+                        <i className="pi pi-check-circle" style={{fontSize:'0.85rem',color:isPopular?'#a5b4fc':'#4f46e5',marginTop:1,flexShrink:0}}/>
+                        <span style={{fontSize:'0.82rem',lineHeight:1.5,color:isPopular?'rgba(255,255,255,0.88)':'#374151'}}>{feat.text}</span>
                       </div>
-                      <div>
-                        <div style={{fontSize:'0.65rem',fontWeight:700,color:plan.color,letterSpacing:'0.1em',textTransform:'uppercase'}}>Paket</div>
-                        <h3 style={{fontSize:'1.3rem',fontWeight:800,color:'#0f172a',letterSpacing:'-0.02em',lineHeight:1}}>{plan.name}</h3>
-                      </div>
-                    </div>
-
-                    <p style={{fontSize:'0.78rem',color:'#94a3b8',lineHeight:1.6,marginBottom:20}}>{plan.tagline}</p>
-
-                    <div style={{marginBottom:8}}>
-                      <div style={{display:'flex',alignItems:'baseline',gap:4}}>
-                        <span style={{fontSize:'1.65rem',fontWeight:800,color:'#0f172a',letterSpacing:'-0.03em',lineHeight:1}}>{plan.price}</span>
-                        <span style={{fontSize:'0.78rem',color:'#94a3b8',fontWeight:500}}>{plan.period}</span>
-                      </div>
-                      {plan.yearlyPrice && (
-                        <div style={{marginTop:4,fontSize:'0.72rem',color:'#94a3b8'}}>
-                          atau {plan.yearlyPrice}
-                        </div>
-                      )}
-                      <div style={{marginTop:8,display:'inline-flex',alignItems:'center',gap:5,background:'#fefce8',border:'1px solid #fde68a',borderRadius:7,padding:'4px 10px'}}>
-                        <i className="pi pi-tag" style={{fontSize:'0.58rem',color:'#f59e0b'}}/>
-                        <span style={{fontSize:'0.68rem',fontWeight:700,color:'#b45309'}}>Hemat 30% → {plan.pilotPrice}/bln</span>
-                      </div>
-                    </div>
-
-                    <div style={{height:1,background:`linear-gradient(90deg,${plan.color}30,#e8ecf4,${plan.color}15)`,margin:'18px 0'}}/>
-
-                    <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
-                      {plan.features.map((feat,j)=>(
-                        <div key={j} style={{display:'flex',alignItems:'flex-start',gap:9}}>
-                          <div style={{width:18,height:18,borderRadius:5,flexShrink:0,marginTop:1,background:feat.included?`${plan.color}15`:'#f8fafc',border:feat.included?`1px solid ${plan.color}35`:'1px solid #e8ecf4',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                            {feat.included
-                              ? <i className="pi pi-check" style={{fontSize:'0.52rem',color:plan.color,fontWeight:900}}/>
-                              : <i className="pi pi-minus" style={{fontSize:'0.48rem',color:'#cbd5e1'}}/>
-                            }
-                          </div>
-                          <span style={{fontSize:'0.8rem',lineHeight:1.5,color:feat.included?'#374151':'#cbd5e1',fontWeight:feat.included?500:400}}>{feat.text}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={e=>{ e.stopPropagation(); goToLogin(); }}
-                      onMouseDown={e=>e.stopPropagation()}
-                      style={{width:'100%',padding:'13px 20px',borderRadius:12,border:'none',background:`linear-gradient(135deg,${plan.color},${idx===0?'#0284c7':idx===1?'#7c3aed':'#6d28d9'})`,color:'#fff',fontWeight:700,fontSize:'0.875rem',cursor:'pointer',fontFamily:"'Poppins',sans-serif",display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:`0 6px 20px ${plan.color}40`,transition:'all 0.25s'}}
-                      onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 10px 28px ${plan.color}55`;}}
-                      onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow=`0 6px 20px ${plan.color}40`;}}
-                    >
-                      <i className={`pi ${hasTrial ? 'pi-gift' : 'pi-arrow-right'}`} style={{fontSize:'0.8rem'}}/>
-                      {hasTrial ? `Coba Gratis ${plan.trialDays} Hari` : 'Mulai Sekarang'}
-                    </button>
+                    ))}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div style={{marginTop:64,background:'linear-gradient(135deg,#f8faff,#f5f3ff)',border:'1px solid #e0e7ff',borderRadius:20,padding:'22px 32px',display:'flex',alignItems:'center',justifyContent:'center',flexWrap:'wrap',gap:20}}>
+          <div style={{marginTop:64,background:'#fff',border:'1px solid #e0e7ff',borderRadius:20,padding:'22px 32px',display:'flex',alignItems:'center',justifyContent:'center',flexWrap:'wrap',gap:20}}>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               <div style={{width:34,height:34,borderRadius:10,background:'#f0f4ff',display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <i className="pi pi-info-circle" style={{color:'#4f46e5',fontSize:'0.85rem'}}/>
@@ -861,13 +718,9 @@ export default function LandingERP() {
               <span style={{fontSize:'0.875rem',fontWeight:700,color:'#0f172a'}}>Biaya Pemasangan Awal (Onboarding)</span>
             </div>
             <div style={{width:1,height:26,background:'#e2e8f0'}}/>
-            <div style={{display:'flex',alignItems:'center',gap:6}}>
-              <span style={{fontSize:'1.05rem',fontWeight:800,color:'#4f46e5'}}>-</span>
-              <span style={{fontSize:'0.78rem',color:'#64748b'}}>per sesi</span>
-            </div>
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center'}}>
               {['Pengaturan sistem','Input data awal','Pengaturan hak akses','Pelatihan pemakaian'].map(item=>(
-                <span key={item} style={{fontSize:'0.72rem',background:'#fff',border:'1px solid #e2e8f0',color:'#64748b',padding:'4px 12px',borderRadius:99,fontWeight:500}}>✓ {item}</span>
+                <span key={item} style={{fontSize:'0.72rem',background:'#f8faff',border:'1px solid #e2e8f0',color:'#64748b',padding:'4px 12px',borderRadius:99,fontWeight:500}}>✓ {item}</span>
               ))}
             </div>
             <div style={{width:1,height:26,background:'#e2e8f0'}}/>
