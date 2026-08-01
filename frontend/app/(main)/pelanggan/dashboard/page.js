@@ -69,10 +69,24 @@ export default function PelangganDashboard() {
     fetchData();
     fetchHistory();
 
+    // ==========================================
+    // SNAP.JS LOADER — PRODUCTION
+    // ==========================================
+    // Sebelumnya: https://app.sandbox.midtrans.com/snap/snap.js (testing, uang simulasi)
+    // Sekarang  : https://app.midtrans.com/snap/snap.js         (production, uang asli)
+    //
+    // Pastikan NEXT_PUBLIC_MIDTRANS_CLIENT_KEY di environment variable Vercel
+    // juga sudah diisi Client Key PRODUCTION (format: Mid-client-xxxxx),
+    // bukan Client Key sandbox (format: SB-Mid-client-xxxxx).
     const script = document.createElement('script');
-    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+    script.src = 'https://app.midtrans.com/snap/snap.js';
     script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
     document.body.appendChild(script);
+
+    return () => {
+      // bersihkan script kalau komponen unmount, biar gak numpuk kalau navigasi bolak-balik
+      document.body.removeChild(script);
+    };
   }, [router]);
 
   const refreshHistory = async () => {

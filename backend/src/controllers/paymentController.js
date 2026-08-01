@@ -2,7 +2,7 @@ import midtransClient from 'midtrans-client';
 import { db } from '../core/config/knex.js';
 
 const snap = new midtransClient.Snap({
-  isProduction: false,
+  isProduction: true,
   serverKey: process.env.MIDTRANS_SERVER_KEY,
 });
 
@@ -45,7 +45,7 @@ export const createPaymentController = async (req, res) => {
         first_name: req.user.name || 'Pengguna',
         email: req.user.email,
       },
-      enabled_payments: ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va', 'other_va'],
+        enabled_payments: ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va', 'other_va', 'dana', 'gopay', 'shopeepay', 'qris'],
     };
 
     const transaction = await snap.createTransaction(parameter);
