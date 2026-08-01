@@ -27,7 +27,7 @@ export default function PelangganDashboard() {
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(null);
-  const [showPlans, setShowPlans] = useState(false); // toggle upgrade/perpanjang saat sudah aktif
+  const [showPlans, setShowPlans] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('TOKEN');
@@ -70,21 +70,14 @@ export default function PelangganDashboard() {
     fetchHistory();
 
     // ==========================================
-    // SNAP.JS LOADER — PRODUCTION
+    // SNAP.JS LOADER — SANDBOX
     // ==========================================
-    // Sebelumnya: https://app.sandbox.midtrans.com/snap/snap.js (testing, uang simulasi)
-    // Sekarang  : https://app.midtrans.com/snap/snap.js         (production, uang asli)
-    //
-    // Pastikan NEXT_PUBLIC_MIDTRANS_CLIENT_KEY di environment variable Vercel
-    // juga sudah diisi Client Key PRODUCTION (format: Mid-client-xxxxx),
-    // bukan Client Key sandbox (format: SB-Mid-client-xxxxx).
     const script = document.createElement('script');
-    script.src = 'https://app.midtrans.com/snap/snap.js';
+    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
     script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
     document.body.appendChild(script);
 
     return () => {
-      // bersihkan script kalau komponen unmount, biar gak numpuk kalau navigasi bolak-balik
       document.body.removeChild(script);
     };
   }, [router]);
@@ -101,7 +94,6 @@ export default function PelangganDashboard() {
     }
   };
 
-  // sudah pernah pakai trial kalau ada satu aja transaksi berstatus 'trial' di riwayat
   const hasUsedTrial = history.some((trx) => trx.status?.toLowerCase() === 'trial');
 
   const handleSubscribe = async (planId) => {
@@ -162,7 +154,6 @@ export default function PelangganDashboard() {
 
   const isActive = subscription?.status === 'active';
 
-  // Sisa hari sampai expired (buat ditampilin di banner)
   let daysLeft = null;
   if (isActive && subscription?.expires_at) {
     const diff = new Date(subscription.expires_at).getTime() - Date.now();
@@ -190,7 +181,6 @@ export default function PelangganDashboard() {
 
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px 80px' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, animation: 'fadeUp 0.5s both' }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)',
@@ -208,7 +198,6 @@ export default function PelangganDashboard() {
 
         {isActive ? (
           <>
-            {/* ===== HERO: paket aktif ===== */}
             <div style={{
               borderRadius: 20, padding: 32, marginBottom: 24,
               background: 'linear-gradient(135deg,#1e1b4b,#4f46e5 55%,#7c3aed)',
@@ -265,14 +254,15 @@ export default function PelangganDashboard() {
               </div>
             </div>
 
-            {/* Plans - disembunyikan default, muncul kalau user memang mau upgrade/perpanjang */}
             {showPlans && (
               <div style={{ marginBottom: 40, animation: 'fadeUp 0.4s both' }}>
                 <div style={{ marginBottom: 16 }}>
                   <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
                     Upgrade / Perpanjang Paket
                   </h2>
-                  <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Semua paket bisa dibayar langsung lewat Midtrans.</p>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                    Semua paket bisa dibayar langsung lewat Midtrans. Untuk transaksi lebih lanjut, silakan hubungi 085607910959.
+                  </p>
                 </div>
                 <div style={{
                   display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16,
@@ -328,7 +318,6 @@ export default function PelangganDashboard() {
           </>
         ) : (
           <>
-            {/* ===== Belum aktif -> paket jadi fokus utama ===== */}
             <div style={{
               borderRadius: 20, padding: 26, marginBottom: 36, background: '#ffffff',
               border: '1.5px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
@@ -354,7 +343,9 @@ export default function PelangganDashboard() {
               <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
                 Pilih Paket
               </h2>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Semua paket bisa dibayar langsung lewat Midtrans.</p>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                Semua paket bisa dibayar langsung lewat Midtrans. Untuk transaksi lebih lanjut, silakan hubungi 085607910959.
+              </p>
             </div>
 
             <div style={{
@@ -417,7 +408,6 @@ export default function PelangganDashboard() {
           </>
         )}
 
-        {/* Riwayat Pemesanan - tetap tampil buat siapa aja */}
         <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Riwayat Pemesanan</h2>
